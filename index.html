@@ -986,11 +986,211 @@ function confirmNuke(){
 }
 
 // ── PDF EXPORT ─────────────────────────────────────────────────────────
+const PDF_CSS=`
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#fff;color:#111;font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:32px;}
+  h1{font-family:'IBM Plex Mono',monospace;font-size:1.1rem;font-weight:600;margin-bottom:4px;}
+  .sub{font-size:.72rem;color:#666;margin-bottom:24px;}
+  .stat-row{display:grid;gap:1px;background:#ddd;border:1px solid #ddd;border-radius:6px;overflow:hidden;margin-bottom:20px;}
+  .stat-cell{background:#f7f7f7;padding:12px 14px;}
+  .stat-label{font-size:.6rem;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
+  .stat-value{font-family:'IBM Plex Mono',monospace;font-size:.95rem;font-weight:600;color:#111;}
+  table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:.75rem;}
+  thead th{padding:8px 10px;text-align:left;font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#555;background:#eee;border-bottom:1px solid #ddd;}
+  tbody td{padding:8px 10px;border-bottom:1px solid #eee;font-family:'IBM Plex Mono',monospace;}
+  tbody td.sans{font-family:'IBM Plex Sans',sans-serif;}
+  tbody tr:last-child td{border-bottom:none;}
+  .section-title{font-family:'IBM Plex Mono',monospace;font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#666;margin:20px 0 10px;}
+  .prod-block{border:1px solid #ddd;border-radius:5px;overflow:hidden;margin-bottom:10px;}
+  .prod-head{display:flex;justify-content:space-between;padding:9px 14px;background:#eee;font-family:'IBM Plex Mono',monospace;font-size:.8rem;font-weight:600;}
+  .prod-body{display:grid;grid-template-columns:repeat(4,1fr);}
+  .prod-cell{padding:9px 14px;border-right:1px solid #eee;}
+  .prod-cell:last-child{border-right:none;}
+  .prod-cell-lbl{font-size:.58rem;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
+  .prod-cell-val{font-family:'IBM Plex Mono',monospace;font-size:.8rem;font-weight:600;}
+  .debtor-card{border:1px solid #ddd;border-radius:5px;overflow:hidden;margin-bottom:10px;}
+  .debtor-head{display:flex;justify-content:space-between;padding:10px 14px;background:#eee;font-family:'IBM Plex Mono',monospace;font-size:.82rem;font-weight:600;}
+  .debtor-day-head{display:flex;justify-content:space-between;padding:7px 14px;background:#f7f7f7;font-size:.7rem;font-family:'IBM Plex Mono',monospace;border-bottom:1px solid #eee;}
+  .chip{display:inline-block;padding:2px 6px;border-radius:2px;font-size:.62rem;font-weight:600;font-family:'IBM Plex Mono',monospace;background:#eee;color:#333;}
+  .grand{display:flex;gap:24px;background:#f7f7f7;border:1px solid #ddd;border-radius:5px;padding:12px 16px;margin-bottom:16px;flex-wrap:wrap;}
+  .grand-item{display:flex;flex-direction:column;gap:3px;}
+  .grand-lbl{font-size:.58rem;color:#666;text-transform:uppercase;letter-spacing:.06em;}
+  .grand-val{font-family:'IBM Plex Mono',monospace;font-size:.9rem;font-weight:600;}
+  .sbar{height:3px;background:#ddd;border-radius:2px;margin-top:4px;width:64px;}
+  .sbar-fill{height:100%;border-radius:2px;background:#333;}
+  @media print{body{padding:16px;} @page{margin:1cm;}}
+`;
+
 function exportPDF(pageId){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('print-target'));
-  document.getElementById('page-'+pageId)?.classList.add('print-target');
-  window.print();
-  document.getElementById('page-'+pageId)?.classList.remove('print-target');
+  const title = {
+    transactions:'Transactions',stock:'Stock',debts:'Debts',
+    debtors:'Debtor Breakdown',summary:'Summary'
+  }[pageId]||pageId;
+  const body = buildPDFBody(pageId);
+  const html = `<!DOCTYPE html><html><head>
+    <meta charset="UTF-8"/>
+    <title>Club Tracker — ${title}</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <style>${PDF_CSS}</style>
+  </head><body>
+    <h1>CLUB TRACKER — ${title.toUpperCase()}</h1>
+    <div class="sub">Generated ${new Date().toLocaleString('en-NG')} &nbsp;·&nbsp; ${S.txns.length} total transactions</div>
+    ${body}
+    <script>window.onload=()=>window.print();<\/script>
+  </body></html>`;
+  const blob = new Blob([html], {type:'text/html'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 10000);
+}
+
+function buildPDFBody(pageId){
+  const td = today();
+  if(pageId==='transactions'){
+    const rows = S.txns;
+    if(!rows.length) return '<p style="color:#666;font-size:.8rem">No transactions recorded.</p>';
+    return `<table>
+      <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Product</th><th>Qty</th><th>Unit</th><th>Total</th><th>Payment</th><th>Customer</th><th>Debt</th><th>By</th></tr></thead>
+      <tbody>${rows.map(t=>`<tr>
+        <td>${t.id}</td><td>${t.date}</td><td>${t.time||'—'}</td>
+        <td class="sans">${t.prod}</td><td>${t.qty}</td><td>₦${Math.round(t.price).toLocaleString()}</td>
+        <td>₦${Math.round(t.total).toLocaleString()}</td><td>${t.pay}</td>
+        <td class="sans">${t.cust}</td><td>${t.isDebt==='Yes'?'Yes':'—'}</td><td>${t.by}</td>
+      </tr>`).join('')}</tbody>
+    </table>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:#444;margin-top:8px">
+      Total revenue: ₦${Math.round(rows.reduce((a,t)=>a+t.total,0)).toLocaleString()} &nbsp;|&nbsp;
+      Cash: ₦${Math.round(rows.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0)).toLocaleString()} &nbsp;|&nbsp;
+      Transfer: ₦${Math.round(rows.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0)).toLocaleString()}
+    </div>`;
+  }
+
+  if(pageId==='stock'){
+    return `<table>
+      <thead><tr><th>Product</th><th>Unit Price</th><th>Opening (${td})</th><th>Sold</th><th>Remaining</th><th>Value</th><th>Status</th></tr></thead>
+      <tbody>${S.products.map(p=>{
+        const key=td+'::'+p.name;
+        const open=S.stock[key]!=null?S.stock[key]:0;
+        const sold=soldOfOnDate(p.name,td);
+        const rem=Math.max(0,open-sold);
+        const low=open>0&&rem<=Math.ceil(open*.15);
+        return `<tr>
+          <td class="sans">${p.name}</td><td>₦${p.price.toLocaleString()}</td>
+          <td>${open}</td><td>${sold}</td><td>${rem}</td>
+          <td>₦${Math.round(rem*p.price).toLocaleString()}</td>
+          <td>${low?'LOW':'OK'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }
+
+  if(pageId==='debts'){
+    const pd=S.debts.filter(d=>d.status==='pending');
+    const cl=S.debts.filter(d=>d.status==='cleared');
+    const owed=pd.reduce((a,d)=>a+(d.owed-d.paid),0);
+    if(!S.debts.length) return '<p style="color:#666;font-size:.8rem">No debts recorded.</p>';
+    return `<div class="grand">
+      <div class="grand-item"><div class="grand-lbl">Pending</div><div class="grand-val">${pd.length}</div></div>
+      <div class="grand-item"><div class="grand-lbl">Outstanding</div><div class="grand-val">₦${Math.round(owed).toLocaleString()}</div></div>
+      <div class="grand-item"><div class="grand-lbl">Cleared</div><div class="grand-val">${cl.length}</div></div>
+    </div>
+    <table>
+      <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Customer</th><th>Product</th><th>Owed</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
+      <tbody>${S.debts.map(d=>{
+        const bal=d.owed-d.paid;
+        return `<tr>
+          <td>${d.id}</td><td>${d.date}</td><td>${d.time||'—'}</td>
+          <td class="sans">${d.cust}</td><td class="sans">${d.prod}</td>
+          <td>₦${Math.round(d.owed).toLocaleString()}</td>
+          <td>₦${Math.round(d.paid).toLocaleString()}</td>
+          <td>₦${Math.round(bal).toLocaleString()}</td>
+          <td>${d.status}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }
+
+  if(pageId==='debtors'){
+    const totalOwed=S.debts.reduce((a,d)=>a+d.owed,0);
+    const totalPaid=S.debts.reduce((a,d)=>a+d.paid,0);
+    if(!S.debts.length) return '<p style="color:#666;font-size:.8rem">No debtors on record.</p>';
+    return `<div class="grand">
+      <div class="grand-item"><div class="grand-lbl">Total Owed</div><div class="grand-val">₦${Math.round(totalOwed).toLocaleString()}</div></div>
+      <div class="grand-item"><div class="grand-lbl">Total Paid</div><div class="grand-val">₦${Math.round(totalPaid).toLocaleString()}</div></div>
+      <div class="grand-item"><div class="grand-lbl">Outstanding</div><div class="grand-val">₦${Math.round(totalOwed-totalPaid).toLocaleString()}</div></div>
+      <div class="grand-item"><div class="grand-lbl">Active Debtors</div><div class="grand-val">${S.debts.filter(d=>d.status==='pending').length}</div></div>
+    </div>
+    ${S.debts.map(d=>{
+      const bal=d.owed-d.paid;
+      const entries=d.entries||[{txnId:d.id,date:d.date,time:d.time||'—',prod:d.prod,qty:'—',amount:d.owed}];
+      const byDay={};
+      entries.forEach(e=>{if(!byDay[e.date])byDay[e.date]=[];byDay[e.date].push(e);});
+      const daysHtml=Object.entries(byDay).sort((a,b)=>b[0].localeCompare(a[0])).map(([date,ents])=>{
+        const dayTotal=ents.reduce((a,e)=>a+e.amount,0);
+        return `<div class="debtor-day-head">${date} <span>₦${Math.round(dayTotal).toLocaleString()}</span></div>
+        <table style="margin-bottom:0">
+          <thead><tr><th>Txn ID</th><th>Time</th><th>Product</th><th>Qty</th><th>Amount</th></tr></thead>
+          <tbody>${ents.map(e=>`<tr>
+            <td>${e.txnId}</td><td>${e.time||'—'}</td>
+            <td class="sans">${e.prod}</td><td>${e.qty}</td>
+            <td>₦${Math.round(e.amount).toLocaleString()}</td>
+          </tr>`).join('')}</tbody>
+        </table>`;
+      }).join('');
+      const payHtml=(d.payments||[]).length?`
+        <div style="padding:8px 14px;background:#f7f7f7;font-size:.68rem;font-family:'IBM Plex Mono',monospace">
+          Payments: ${(d.payments||[]).map(p=>`${p.date} ${p.time} — ₦${Math.round(p.amount).toLocaleString()} (${p.note})`).join(' · ')}
+        </div>`:'';
+      return `<div class="debtor-card">
+        <div class="debtor-head"><span>${d.cust}</span><span>${d.status==='cleared'?'CLEARED':'₦'+Math.round(bal).toLocaleString()+' owed'} · ${d.status}</span></div>
+        ${daysHtml}${payHtml}
+      </div>`;
+    }).join('')}`;
+  }
+
+  if(pageId==='summary'){
+    const now=new Date(), td2=today();
+    const wk=new Date(now); wk.setDate(now.getDate()-now.getDay()+1);
+    const wkS=wk.toISOString().slice(0,10);
+    const mo=td2.slice(0,7);
+    const periods=[
+      {label:'Today',    txns:S.txns.filter(t=>t.date===td2)},
+      {label:'This Week',txns:S.txns.filter(t=>t.date>=wkS)},
+      {label:'This Month',txns:S.txns.filter(t=>t.date.startsWith(mo))},
+      {label:'All Time', txns:S.txns},
+    ];
+    return periods.map(({label,txns})=>{
+      const cash=txns.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
+      const trans=txns.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+      return `<div class="section-title">${label}</div>
+      <div class="grand" style="margin-bottom:10px">
+        <div class="grand-item"><div class="grand-lbl">Revenue</div><div class="grand-val">₦${Math.round(cash+trans).toLocaleString()}</div></div>
+        <div class="grand-item"><div class="grand-lbl">Cash</div><div class="grand-val">₦${Math.round(cash).toLocaleString()}</div></div>
+        <div class="grand-item"><div class="grand-lbl">Transfer</div><div class="grand-val">₦${Math.round(trans).toLocaleString()}</div></div>
+      </div>
+      ${S.products.map(p=>{
+        const pt=txns.filter(t=>t.prod===p.name);
+        const units=pt.reduce((a,t)=>a+t.qty,0);
+        const pc=pt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
+        const pt2=pt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+        return `<div class="prod-block">
+          <div class="prod-head"><span>${p.name}</span><span>₦${Math.round(pc+pt2).toLocaleString()}</span></div>
+          <div class="prod-body">
+            <div class="prod-cell"><div class="prod-cell-lbl">Units</div><div class="prod-cell-val">${units}</div></div>
+            <div class="prod-cell"><div class="prod-cell-lbl">Cash</div><div class="prod-cell-val">₦${Math.round(pc).toLocaleString()}</div></div>
+            <div class="prod-cell"><div class="prod-cell-lbl">Transfer</div><div class="prod-cell-val">₦${Math.round(pt2).toLocaleString()}</div></div>
+            <div class="prod-cell"><div class="prod-cell-lbl">Total</div><div class="prod-cell-val">₦${Math.round(pc+pt2).toLocaleString()}</div></div>
+          </div>
+        </div>`;
+      }).join('')}`;
+    }).join('<hr style="border:none;border-top:1px solid #ddd;margin:20px 0"/>');
+  }
+  return '';
 }
 
 // ── RENDER FUNCTIONS ───────────────────────────────────────────────────
