@@ -887,12 +887,21 @@ function submitPayment(){
   const p=parseFloat(document.getElementById('modal-amt')?.value);
   if(!p||isNaN(p)||p<=0){toast('Enter a valid amount','err');return;}
   const note=document.getElementById('modal-note')?.value.trim()||'—';
-  d.paid=Math.min(d.paid+p,d.owed);
-  d.status=d.paid>=d.owed?'cleared':'pending';
   d.payments=d.payments||[];
   d.payments.push({date:today(),time:nowt(),amount:p,note});
-  persist(); renderAll(); closeModal();
-  toast('Payment: '+N(p));
+  d.paid=Math.min(d.paid+p,d.owed);
+  if(d.paid>=d.owed){
+    const txnIds=new Set((d.entries||[]).map(e=>e.txnId));
+    txnIds.add(d.id);
+    S.txns.forEach(t=>{ if(txnIds.has(t.id)) t.isDebt='No'; });
+    S.debts.splice(activeDebtIdx,1);
+    persist(); renderAll(); closeModal();
+    toast('Debt cleared — '+d.cust);
+  } else {
+    d.status='pending';
+    persist(); renderAll(); closeModal();
+    toast('Payment: '+N(p));
+  }
   activeDebtIdx=null;
 }
 
@@ -1340,24 +1349,24 @@ function renderStock(){
 
 function renderDebts(){
   const pd=S.debts.filter(d=>d.status==='pending');
-  const cl=S.debts.filter(d=>d.status==='cleared');
   document.getElementById('debt-stats').innerHTML=`
     <div class="stat-cell"><div class="stat-label">Pending</div><div class="stat-value red">${pd.length}</div></div>
     <div class="stat-cell"><div class="stat-label">Outstanding</div><div class="stat-value amb">${N(pd.reduce((a,d)=>a+(d.owed-d.paid),0))}</div></div>
-    <div class="stat-cell"><div class="stat-label">Cleared</div><div class="stat-value grn">${cl.length}</div></div>`;
+    <div class="stat-cell"><div class="stat-label">Total Debtors</div><div class="stat-value grn">${S.debts.length}</div></div>`;
   const tb=document.getElementById('debt-body');
-  if(!S.debts.length){tb.innerHTML=`<tr><td colspan="10" class="empty-state">No debts recorded.</td></tr>`;return;}
-  tb.innerHTML=S.debts.map((d,i)=>{
+  if(!pd.length){tb.innerHTML=`<tr><td colspan="10" class="empty-state">No outstanding debts.</td></tr>`;return;}
+  tb.innerHTML=pd.map((d,i)=>{
+    const realIdx=S.debts.indexOf(d);
     const bal=d.owed-d.paid;
     return `<tr>
       <td class="txnid">${d.id}</td><td>${d.date}</td><td>${d.time||'—'}</td>
       <td class="sans">${d.cust}</td><td class="sans">${d.prod}</td>
       <td>${N(d.owed)}</td><td class="mono-green">${N(d.paid)}</td>
-      <td style="color:${bal>0?'var(--red)':'var(--green)'};font-weight:600">${N(bal)}</td>
-      <td><span class="chip chip-${d.status}">${d.status==='cleared'?'Cleared':'Pending'}</span></td>
+      <td style="color:var(--red);font-weight:600">${N(bal)}</td>
+      <td><span class="chip chip-pending">Pending</span></td>
       <td style="white-space:nowrap">
-        ${d.status==='pending'?`<button class="btn btn-grn" onclick="markPaid(${i})">Pay</button>`:''}
-        <button class="btn btn-red" onclick="delDebt(${i})" style="margin-left:4px">&#x2715;</button>
+        <button class="btn btn-grn" onclick="markPaid(${realIdx})">Pay</button>
+        <button class="btn btn-red" onclick="delDebt(${realIdx})" style="margin-left:4px">&#x2715;</button>
       </td>
     </tr>`;
   }).join('');
