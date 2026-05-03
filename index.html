@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Club Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#080808;--s1:#0f0f0f;--s2:#161616;--s3:#1e1e1e;
+  --line:#2a2a2a;--line2:#333;--t1:#f0f0f0;--t2:#888;--t3:#444;
+  --acc:#e8ff47;--acc-dim:rgba(232,255,71,.08);
+  --red:#ff4545;--green:#2dce89;--blue:#4a9eff;--amber:#ffaa00;--purple:#b47fff;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+}
+html{font-size:14px;}
+body{background:var(--bg);color:var(--t1);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+.shell{display:grid;grid-template-columns:224px 1fr;min-height:100vh;}
+.sidebar{background:var(--s1);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.main{overflow:hidden;}
+.sb-brand{padding:22px 20px 18px;border-bottom:1px solid var(--line);}
+.sb-brand-name{font-family:var(--mono);font-size:.92rem;font-weight:600;letter-spacing:-.02em;}
+.sb-brand-sub{font-size:.65rem;color:var(--t3);margin-top:3px;font-family:var(--mono);}
+.sb-kpi{padding:14px 20px;border-bottom:1px solid var(--line);}
+.kpi-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;}
+.kpi-row:not(:last-child){border-bottom:1px solid var(--line);}
+.kpi-lbl{font-size:.62rem;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;}
+.kpi-val{font-family:var(--mono);font-size:.8rem;font-weight:600;color:var(--acc);}
+.kpi-val.red{color:var(--red);}
+.kpi-val.green{color:var(--green);}
+.sb-nav{flex:1;padding:10px 0;}
+.nav-section{padding:8px 20px 4px;font-size:.58rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;transition:all .15s;border-left:2px solid transparent;font-size:.8rem;color:var(--t2);}
+.nav-item:hover{color:var(--t1);background:var(--s2);}
+.nav-item.active{color:var(--t1);border-left-color:var(--acc);background:var(--acc-dim);}
+.nav-item .ni-dot{width:6px;height:6px;border-radius:50%;background:var(--t3);flex-shrink:0;transition:background .15s;}
+.nav-item.active .ni-dot{background:var(--acc);}
+.nav-item span{font-size:.75rem;}
+.topbar{display:none;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--s1);position:sticky;top:0;z-index:100;}
+.topbar-brand{font-family:var(--mono);font-size:.85rem;font-weight:600;}
+.menu-btn{background:none;border:1px solid var(--line2);color:var(--t1);padding:6px 10px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:.7rem;}
+.drawer{position:fixed;inset:0;z-index:200;display:none;}
+.drawer.open{display:block;}
+.drawer-overlay{position:absolute;inset:0;background:rgba(0,0,0,.7);}
+.drawer-panel{position:absolute;left:0;top:0;bottom:0;width:260px;background:var(--s1);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow-y:auto;}
+.content{padding:26px 28px;max-width:980px;}
+.page{display:none;}
+.page.active{display:block;}
+.page-header{margin-bottom:22px;padding-bottom:14px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.page-title{font-family:var(--mono);font-size:1.05rem;font-weight:600;letter-spacing:-.02em;}
+.page-sub{font-size:.7rem;color:var(--t2);margin-top:4px;}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:22px;}
+.stat-cell{background:var(--s1);padding:15px 14px;}
+.stat-label{font-size:.6rem;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.stat-value{font-family:var(--mono);font-size:1rem;font-weight:600;}
+.stat-value.acc{color:var(--acc);}
+.stat-value.grn{color:var(--green);}
+.stat-value.blu{color:var(--blue);}
+.stat-value.amb{color:var(--amber);}
+.stat-value.red{color:var(--red);}
+.stat-value.pur{color:var(--purple);}
+.form-block{background:var(--s1);border:1px solid var(--line);border-radius:6px;padding:18px 20px;margin-bottom:18px;}
+.form-block-title{font-family:var(--mono);font-size:.68rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;}
+.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px;}
+.f-group{display:flex;flex-direction:column;gap:5px;}
+.f-label{font-size:.6rem;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;}
+.f-inp{background:var(--s2);border:1px solid var(--line2);border-radius:4px;padding:8px 10px;color:var(--t1);font-family:var(--mono);font-size:.8rem;outline:none;width:100%;transition:border-color .15s;}
+.f-inp:focus{border-color:var(--acc);}
+.f-inp option{background:var(--s2);}
+.f-warn{font-size:.62rem;color:var(--amber);margin-top:3px;display:none;}
+.f-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+.btn{padding:8px 16px;border:none;border-radius:4px;font-family:var(--mono);font-size:.73rem;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.02em;white-space:nowrap;}
+.btn-acc{background:var(--acc);color:#080808;}
+.btn-acc:hover{background:#d4eb3e;}
+.btn-ghost{background:none;border:1px solid var(--line2);color:var(--t2);}
+.btn-ghost:hover{color:var(--t1);border-color:var(--t2);}
+.btn-red{background:none;border:1px solid rgba(255,69,69,.3);color:var(--red);font-size:.68rem;padding:5px 9px;}
+.btn-red:hover{background:rgba(255,69,69,.1);}
+.btn-blue{background:none;border:1px solid rgba(74,158,255,.3);color:var(--blue);font-size:.68rem;padding:5px 9px;}
+.btn-blue:hover{background:rgba(74,158,255,.1);}
+.btn-grn{background:none;border:1px solid rgba(45,206,137,.3);color:var(--green);font-size:.68rem;padding:5px 9px;}
+.btn-grn:hover{background:rgba(45,206,137,.1);}
+.btn-pdf{background:none;border:1px solid rgba(232,255,71,.25);color:var(--acc);font-size:.7rem;padding:7px 13px;}
+.btn-pdf:hover{background:var(--acc-dim);}
+.btn-sm{padding:5px 10px;font-size:.68rem;}
+.tbl-wrap{background:var(--s1);border:1px solid var(--line);border-radius:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;min-width:480px;}
+thead th{padding:9px 11px;text-align:left;font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);background:var(--s2);border-bottom:1px solid var(--line);white-space:nowrap;}
+tbody td{padding:9px 11px;font-size:.76rem;border-bottom:1px solid var(--line);font-family:var(--mono);vertical-align:middle;}
+tbody td.sans{font-family:var(--sans);}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:rgba(255,255,255,.02);}
+.empty-state{text-align:center;padding:36px 20px;color:var(--t3);font-size:.78rem;}
+.chip{display:inline-block;padding:2px 7px;border-radius:2px;font-size:.63rem;font-weight:600;font-family:var(--mono);letter-spacing:.04em;}
+.chip-cash{background:rgba(45,206,137,.12);color:var(--green);}
+.chip-transfer{background:rgba(74,158,255,.12);color:var(--blue);}
+.chip-debt{background:rgba(255,170,0,.12);color:var(--amber);}
+.chip-pending{background:rgba(255,170,0,.1);color:var(--amber);}
+.chip-cleared{background:rgba(45,206,137,.1);color:var(--green);}
+.chip-low{background:rgba(255,69,69,.1);color:var(--red);}
+.chip-ok{background:rgba(45,206,137,.1);color:var(--green);}
+.sbar{height:3px;background:var(--s3);border-radius:2px;margin-top:5px;width:72px;}
+.sbar-fill{height:100%;border-radius:2px;}
+.period-row{display:flex;gap:0;border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-bottom:18px;width:fit-content;}
+.period-btn{padding:7px 15px;background:none;border:none;color:var(--t2);font-family:var(--mono);font-size:.7rem;cursor:pointer;border-right:1px solid var(--line);transition:all .15s;}
+.period-btn:last-child{border-right:none;}
+.period-btn.active{background:var(--acc);color:#080808;font-weight:600;}
+.period-btn:hover:not(.active){background:var(--s2);color:var(--t1);}
+.prod-ledger{background:var(--s1);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:10px;}
+.pl-head{display:grid;grid-template-columns:1fr auto;align-items:center;padding:11px 15px;border-bottom:1px solid var(--line);background:var(--s2);}
+.pl-name{font-family:var(--mono);font-size:.8rem;font-weight:600;}
+.pl-total{font-family:var(--mono);font-size:.8rem;color:var(--acc);}
+.pl-body{display:grid;grid-template-columns:repeat(4,1fr);gap:0;}
+.pl-cell{padding:11px 15px;border-right:1px solid var(--line);}
+.pl-cell:last-child{border-right:none;}
+.pl-cell-lbl{font-size:.58rem;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
+.pl-cell-val{font-family:var(--mono);font-size:.82rem;font-weight:600;}
+.filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;}
+.filter-row .f-inp{flex:1;min-width:120px;}
+.txnid{color:var(--acc);font-size:.7rem;}
+.mono-green{color:var(--green);}
+.mono-red{color:var(--red);}
+.section-label{font-family:var(--mono);font-size:.62rem;color:var(--t2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;margin-top:20px;}
+
+/* DEBTOR BREAKDOWN */
+.debt-grand{background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:14px 18px;margin-bottom:18px;display:flex;gap:28px;flex-wrap:wrap;}
+.dg-item{display:flex;flex-direction:column;gap:3px;}
+.dg-lbl{font-size:.58rem;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;}
+.dg-val{font-family:var(--mono);font-size:.95rem;font-weight:600;}
+.debtor-card{background:var(--s1);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:12px;}
+.debtor-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:var(--s2);border-bottom:1px solid var(--line);cursor:pointer;user-select:none;}
+.debtor-head:hover{background:var(--s3);}
+.debtor-name{font-family:var(--mono);font-size:.85rem;font-weight:600;}
+.debtor-meta{display:flex;gap:14px;align-items:center;}
+.debtor-owed{font-family:var(--mono);font-size:.8rem;color:var(--red);}
+.debtor-owed.cleared{color:var(--green);}
+.debtor-toggle{font-family:var(--mono);font-size:.62rem;color:var(--t3);}
+.debtor-body{display:none;}
+.debtor-body.open{display:block;}
+.debtor-day{border-bottom:1px solid var(--line);}
+.debtor-day:last-child{border-bottom:none;}
+.debtor-day-head{display:flex;justify-content:space-between;align-items:center;padding:8px 16px;background:rgba(255,255,255,.015);}
+.debtor-day-date{font-size:.68rem;color:var(--t2);font-family:var(--mono);}
+.debtor-day-total{font-size:.7rem;font-family:var(--mono);color:var(--amber);}
+.debtor-entries table{min-width:0;width:100%;}
+.debtor-entries thead th{font-size:.56rem;padding:6px 12px;}
+.debtor-entries tbody td{font-size:.7rem;padding:6px 12px;}
+.pay-log{padding:10px 16px 12px;border-top:1px solid var(--line);background:rgba(45,206,137,.03);}
+.pay-log-title{font-size:.58rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;font-family:var(--mono);}
+.pay-entry{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--line);}
+.pay-entry:last-child{border-bottom:none;}
+.pay-entry-meta{font-size:.68rem;color:var(--t2);font-family:var(--mono);}
+.pay-entry-amt{font-size:.7rem;color:var(--green);font-family:var(--mono);font-weight:600;}
+.debtor-actions{padding:11px 16px;border-top:1px solid var(--line);display:flex;gap:8px;}
+
+/* PRODUCTS PAGE */
+.prod-list{display:flex;flex-direction:column;gap:10px;margin-bottom:18px;}
+.prod-row{background:var(--s1);border:1px solid var(--line);border-radius:5px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;gap:12px;}
+.prod-row-info{display:flex;flex-direction:column;gap:3px;}
+.prod-row-name{font-family:var(--mono);font-size:.82rem;font-weight:600;}
+.prod-row-price{font-size:.7rem;color:var(--green);font-family:var(--mono);}
+.prod-row-actions{display:flex;gap:6px;}
+
+/* DATA PAGE */
+.data-section{background:var(--s1);border:1px solid var(--line);border-radius:6px;padding:18px 20px;margin-bottom:16px;}
+.data-section-title{font-family:var(--mono);font-size:.68rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;}
+.data-info{font-size:.75rem;color:var(--t2);margin-bottom:14px;line-height:1.6;}
+
+/* MODAL */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:300;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-backdrop.open{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--line2);border-radius:8px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid var(--line);background:var(--s2);position:sticky;top:0;}
+.modal-title{font-family:var(--mono);font-size:.83rem;font-weight:600;}
+.modal-close{background:none;border:none;color:var(--t2);cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;}
+.modal-close:hover{color:var(--t1);}
+.modal-body{padding:18px 20px;display:flex;flex-direction:column;gap:13px;}
+.modal-footer{padding:12px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;background:var(--s2);}
+.modal-info{font-size:.73rem;color:var(--t2);font-family:var(--mono);background:var(--s2);padding:8px 12px;border-radius:4px;}
+.modal-warn{font-size:.73rem;color:var(--amber);font-family:var(--mono);background:rgba(255,170,0,.08);border:1px solid rgba(255,170,0,.2);padding:8px 12px;border-radius:4px;}
+.modal-danger{font-size:.73rem;color:var(--red);font-family:var(--mono);background:rgba(255,69,69,.08);border:1px solid rgba(255,69,69,.2);padding:8px 12px;border-radius:4px;}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--s3);border:1px solid var(--line2);border-radius:4px;padding:10px 18px;font-size:.73rem;font-family:var(--mono);z-index:999;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.ok{border-color:rgba(45,206,137,.4);color:var(--green);}
+.toast.err{border-color:rgba(255,69,69,.4);color:var(--red);}
+.toast.warn{border-color:rgba(255,170,0,.4);color:var(--amber);}
+
+@media(max-width:768px){
+  .shell{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .topbar{display:flex;}
+  .content{padding:14px;}
+  .stat-row{grid-template-columns:1fr 1fr;}
+  .fg{grid-template-columns:1fr 1fr;}
+  .pl-body{grid-template-columns:1fr 1fr;}
+  .pl-cell{border-bottom:1px solid var(--line);}
+  .pl-cell:nth-child(even){border-right:none;}
+  .pl-cell:nth-last-child(-n+2){border-bottom:none;}
+  .period-row{width:100%;}
+  .period-btn{flex:1;text-align:center;}
+  table{min-width:380px;}
+  .debt-grand{gap:14px;}
+  .debtor-meta{gap:8px;}
+}
+@media(max-width:420px){
+  .stat-row{grid-template-columns:1fr 1fr;}
+  .stat-cell{padding:11px 10px;}
+  .stat-value{font-size:.9rem;}
+  .content{padding:10px;}
+}
+
+/* PRINT */
+@media print{
+  body{background:#fff!important;color:#000!important;}
+  .sidebar,.topbar,.drawer,.toast,.modal-backdrop,.btn-pdf,.btn-red,.btn-grn,.btn-blue,.btn-acc,.btn-ghost,
+  .f-actions,.form-block,.filter-row,.period-row,.debtor-actions,.header-actions{display:none!important;}
+  .shell{display:block!important;}
+  .main,.content{display:block!important;max-width:100%!important;padding:0!important;}
+  .page{display:none!important;}
+  .page.print-target{display:block!important;}
+  :root{--bg:#fff;--s1:#f7f7f7;--s2:#eee;--s3:#e4e4e4;--line:#d5d5d5;--line2:#ccc;
+    --t1:#111;--t2:#555;--t3:#999;--acc:#333;--acc-dim:rgba(0,0,0,.04);
+    --green:#1a8a55;--blue:#2255cc;--amber:#996600;--red:#cc2222;--purple:#6633aa;}
+  .stat-row{grid-template-columns:repeat(4,1fr)!important;}
+  .prod-ledger,.debtor-card{break-inside:avoid;}
+  table{min-width:0!important;}
+  .debtor-body{display:block!important;}
+  .tbl-wrap{border:1px solid #ddd!important;}
+  thead th{background:#eee!important;}
+  .page-header{border-color:#ddd!important;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-brand">CLUB / TRACKER</span>
+  <button class="menu-btn" onclick="toggleDrawer()">MENU</button>
+</div>
+
+<div class="drawer" id="drawer" onclick="closeDrawerOutside(event)">
+  <div class="drawer-overlay"></div>
+  <div class="drawer-panel" id="drawer-panel">
+    <div class="sb-brand"><div class="sb-brand-name">CLUB TRACKER</div><div class="sb-brand-sub">Sales · Stock · Debts</div></div>
+    <div class="sb-kpi" id="drawer-kpi"></div>
+    <nav class="sb-nav" id="drawer-nav"></nav>
+  </div>
+</div>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sb-brand"><div class="sb-brand-name">CLUB / TRACKER</div><div class="sb-brand-sub">Sales · Stock · Debts</div></div>
+    <div class="sb-kpi" id="sidebar-kpi"></div>
+    <nav class="sb-nav" id="sidebar-nav"></nav>
+  </aside>
+
+  <div class="main"><div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div><div class="page-title">Dashboard</div><div class="page-sub" id="dash-date"></div></div>
+      </div>
+      <div class="stat-row" id="dash-stats"></div>
+      <div class="section-label">Today's Ledger by Product</div>
+      <div id="dash-ledgers"></div>
+    </div>
+
+    <!-- TRANSACTIONS -->
+    <div class="page" id="page-transactions">
+      <div class="page-header">
+        <div><div class="page-title">Transactions</div><div class="page-sub">Log sales — past or present</div></div>
+        <div class="header-actions"><button class="btn btn-pdf" onclick="exportPDF('transactions')">&#x2B07; PDF</button></div>
+      </div>
+      <div class="form-block" id="txn-form-block">
+        <div class="form-block-title" id="txn-form-title">New Transaction</div>
+        <input type="hidden" id="f-edit-id"/>
+        <div class="fg">
+          <div class="f-group"><label class="f-label">Date</label><input type="date" id="f-date" class="f-inp"/></div>
+          <div class="f-group"><label class="f-label">Product</label>
+            <select id="f-prod" class="f-inp"></select>
+          </div>
+          <div class="f-group"><label class="f-label">Qty</label><input type="number" id="f-qty" class="f-inp" value="1" min="1"/></div>
+          <div class="f-group"><label class="f-label">Payment</label>
+            <select id="f-pay" class="f-inp"><option value="Cash">Cash</option><option value="Transfer">Transfer</option></select>
+          </div>
+          <div class="f-group">
+            <label class="f-label">Customer</label>
+            <input type="text" id="f-cust" class="f-inp" placeholder="Name or walk-in"/>
+          </div>
+          <div class="f-group"><label class="f-label">Is Debt?</label>
+            <select id="f-debt" class="f-inp"><option value="No">No</option><option value="Yes">Yes</option></select>
+          </div>
+          <div class="f-group"><label class="f-label">Recorded By</label><input type="text" id="f-by" class="f-inp" placeholder="Name"/></div>
+        </div>
+        <div class="f-actions">
+          <button class="btn btn-acc" id="txn-submit-btn" onclick="submitTxn()">Add Transaction</button>
+          <button class="btn btn-ghost" onclick="cancelTxnEdit()">Clear</button>
+        </div>
+      </div>
+      <div class="filter-row">
+        <input type="date" id="fl-date" class="f-inp" onchange="renderTxnTable()"/>
+        <select id="fl-prod" class="f-inp" onchange="renderTxnTable()">
+          <option value="">All Products</option>
+        </select>
+        <select id="fl-pay" class="f-inp" onchange="renderTxnTable()">
+          <option value="">Cash + Transfer</option>
+          <option>Cash</option><option>Transfer</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="clearTxnFilters()">Clear Filters</button>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Product</th><th>Qty</th><th>Unit</th><th>Total</th><th>Pay</th><th>Customer</th><th>Debt</th><th>By</th><th></th></tr></thead>
+        <tbody id="txn-body"></tbody>
+      </table></div>
+    </div>
+
+    <!-- STOCK -->
+    <div class="page" id="page-stock">
+      <div class="page-header">
+        <div><div class="page-title">Stock</div><div class="page-sub">Opening stock per date</div></div>
+        <div class="header-actions"><button class="btn btn-pdf" onclick="exportPDF('stock')">&#x2B07; PDF</button></div>
+      </div>
+      <div class="form-block">
+        <div class="form-block-title">Set Opening Stock for Date</div>
+        <div class="fg" style="margin-bottom:12px">
+          <div class="f-group"><label class="f-label">Date</label><input type="date" id="stock-date" class="f-inp" onchange="loadStockForDate()"/></div>
+        </div>
+        <div class="fg" id="stock-inputs"></div>
+        <div class="f-actions"><button class="btn btn-acc" onclick="saveStock()">Save Stock</button></div>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Product</th><th>Unit Price</th><th>Opening</th><th>Sold</th><th>Remaining</th><th>Value</th><th>Status</th></tr></thead>
+        <tbody id="stock-body"></tbody>
+      </table></div>
+    </div>
+
+    <!-- DEBTS -->
+    <div class="page" id="page-debts">
+      <div class="page-header">
+        <div><div class="page-title">Debts</div><div class="page-sub">Outstanding balances</div></div>
+        <div class="header-actions"><button class="btn btn-pdf" onclick="exportPDF('debts')">&#x2B07; PDF</button></div>
+      </div>
+      <div class="stat-row" id="debt-stats" style="grid-template-columns:repeat(3,1fr)"></div>
+      <div class="form-block" style="margin-top:18px">
+        <div class="form-block-title">Add Manual Debt</div>
+        <div class="fg">
+          <div class="f-group">
+            <label class="f-label">Customer</label>
+            <input type="text" id="d-name" class="f-inp" placeholder="Full name" oninput="checkDebtorName()"/>
+            <div class="f-warn" id="d-name-warn"></div>
+          </div>
+          <div class="f-group"><label class="f-label">Product</label><select id="d-prod" class="f-inp"></select></div>
+          <div class="f-group"><label class="f-label">Amount (&#8358;)</label><input type="number" id="d-amt" class="f-inp" placeholder="0"/></div>
+          <div class="f-group"><label class="f-label">Date</label><input type="date" id="d-date" class="f-inp"/></div>
+        </div>
+        <div class="f-actions"><button class="btn btn-acc" onclick="addDebt()">Add Debt</button></div>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Customer</th><th>Product</th><th>Owed</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr></thead>
+        <tbody id="debt-body"></tbody>
+      </table></div>
+    </div>
+
+    <!-- DEBTOR BREAKDOWN -->
+    <div class="page" id="page-debtors">
+      <div class="page-header">
+        <div><div class="page-title">Debtor Breakdown</div><div class="page-sub">Per-person totals · daily history · payment log</div></div>
+        <div class="header-actions"><button class="btn btn-pdf" onclick="exportPDF('debtors')">&#x2B07; PDF</button></div>
+      </div>
+      <div class="debt-grand" id="debtor-grand"></div>
+      <div id="debtor-cards"></div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="page" id="page-summary">
+      <div class="page-header">
+        <div><div class="page-title">Summary</div><div class="page-sub">Revenue by period and product</div></div>
+        <div class="header-actions"><button class="btn btn-pdf" onclick="exportPDF('summary')">&#x2B07; PDF</button></div>
+      </div>
+      <div class="period-row">
+        <button class="period-btn active" onclick="setPeriod('day',this)">Today</button>
+        <button class="period-btn" onclick="setPeriod('week',this)">This Week</button>
+        <button class="period-btn" onclick="setPeriod('month',this)">This Month</button>
+        <button class="period-btn" onclick="setPeriod('all',this)">All Time</button>
+      </div>
+      <div class="stat-row" id="sum-stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px;"></div>
+      <div id="sum-ledgers"></div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="page" id="page-products">
+      <div class="page-header">
+        <div><div class="page-title">Products</div><div class="page-sub">Add, edit, or remove products and prices</div></div>
+      </div>
+      <div class="form-block">
+        <div class="form-block-title" id="prod-form-title">Add Product</div>
+        <input type="hidden" id="pf-edit-name"/>
+        <div class="fg">
+          <div class="f-group"><label class="f-label">Product Name</label><input type="text" id="pf-name" class="f-inp" placeholder="e.g. Malt"/></div>
+          <div class="f-group"><label class="f-label">Unit Price (&#8358;)</label><input type="number" id="pf-price" class="f-inp" placeholder="0" min="1"/></div>
+        </div>
+        <div class="f-actions">
+          <button class="btn btn-acc" onclick="submitProduct()">Save Product</button>
+          <button class="btn btn-ghost" onclick="cancelProductEdit()">Clear</button>
+        </div>
+      </div>
+      <div class="prod-list" id="prod-list"></div>
+    </div>
+
+    <!-- DATA -->
+    <div class="page" id="page-data">
+      <div class="page-header">
+        <div><div class="page-title">Data &amp; Backup</div><div class="page-sub">Export, import, and manage your data</div></div>
+      </div>
+      <div class="data-section">
+        <div class="data-section-title">Export Backup</div>
+        <div class="data-info">Download all your transactions, debts, stock, and product data as a JSON file. Keep this safe — it's your full backup.</div>
+        <div class="f-actions">
+          <button class="btn btn-acc" onclick="exportJSON()">&#x2B07; Download Backup</button>
+        </div>
+      </div>
+      <div class="data-section">
+        <div class="data-section-title">Import Backup</div>
+        <div class="data-info">Restore from a previously exported JSON backup. <span style="color:var(--amber)">Warning: this will replace all current data.</span></div>
+        <div class="f-actions">
+          <button class="btn btn-ghost" onclick="document.getElementById('import-file').click()">&#x2B06; Choose Backup File</button>
+          <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)"/>
+        </div>
+      </div>
+      <div class="data-section">
+        <div class="data-section-title">Data Summary</div>
+        <div id="data-summary" style="font-family:var(--mono);font-size:.75rem;color:var(--t2);line-height:2"></div>
+      </div>
+      <div class="data-section" style="border-color:rgba(255,69,69,.3)">
+        <div class="data-section-title" style="color:var(--red)">Danger Zone</div>
+        <div class="data-info">Permanently delete all data. This cannot be undone. Export a backup first.</div>
+        <div class="f-actions">
+          <button class="btn btn-red" style="padding:8px 16px;font-size:.73rem;" onclick="nukeData()">&#x26A0; Wipe All Data</button>
+        </div>
+      </div>
+    </div>
+
+  </div></div>
+</div>
+
+<!-- MODAL: generic -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">Modal</div>
+      <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────
+let S = { txns:[], debts:[], stock:{}, products:[] };
+const DEFAULT_PRODUCTS = [
+  {name:"Lucozade 25cl", price:600},
+  {name:"Lucozade 45cl", price:1000},
+  {name:"Ribena",        price:600},
+  {name:"Water 50cl",    price:200},
+  {name:"Soft Drink 50cl",price:500}
+];
+
+function loadState(){
+  try{
+    const d=localStorage.getItem('ct5');
+    if(d){ S=JSON.parse(d); }
+  }catch(e){}
+  if(!S.products||!S.products.length) S.products=[...DEFAULT_PRODUCTS];
+  if(!S.txns) S.txns=[];
+  if(!S.debts) S.debts=[];
+  if(!S.stock) S.stock={};
+}
+function persist(){
+  try{localStorage.setItem('ct5',JSON.stringify(S));}catch(e){
+    toast('Storage full — export a backup!','err');
+  }
+}
+loadState();
+
+// ── HELPERS ────────────────────────────────────────────────────────────
+const N    = n => '&#8358;'+Math.round(n||0).toLocaleString();
+const Nraw = n => '₦'+Math.round(n||0).toLocaleString();
+const today= ()=> new Date().toISOString().slice(0,10);
+const nowt = ()=> new Date().toTimeString().slice(0,8);
+const uid  = ()=> Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const priceOf = name => { const p=S.products.find(x=>x.name===name); return p?p.price:0; };
+
+function toast(msg,type='ok'){
+  const el=document.getElementById('toast');
+  el.innerHTML=msg; el.className='toast show '+type;
+  setTimeout(()=>el.className='toast',2600);
+}
+
+// ── MODAL ──────────────────────────────────────────────────────────────
+function showModal(title, bodyHTML, footerHTML){
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-body').innerHTML=bodyHTML;
+  document.getElementById('modal-footer').innerHTML=footerHTML;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────
+const PAGES=[
+  {id:'dashboard',   label:'Dashboard'},
+  {id:'transactions',label:'Transactions'},
+  {id:'stock',       label:'Stock'},
+  {id:'debts',       label:'Debts'},
+  {id:'debtors',     label:'Debtor Breakdown'},
+  {id:'summary',     label:'Summary'},
+  {id:'products',    label:'Products'},
+  {id:'data',        label:'Data & Backup'},
+];
+function buildNav(cid){
+  document.getElementById(cid).innerHTML='<div class="nav-section">Menu</div>'+
+    PAGES.map(p=>`<div class="nav-item" id="ni-${cid}-${p.id}" onclick="goTo('${p.id}')"><div class="ni-dot"></div><span>${p.label}</span></div>`).join('');
+}
+buildNav('sidebar-nav'); buildNav('drawer-nav');
+
+function goTo(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll(`[id$="-${id}"]`).forEach(n=>{if(n.classList.contains('nav-item'))n.classList.add('active');});
+  closeDrawer(); renderAll();
+}
+function toggleDrawer(){
+  document.getElementById('drawer').classList.toggle('open');
+  document.getElementById('drawer-kpi').innerHTML=document.getElementById('sidebar-kpi').innerHTML;
+  document.getElementById('drawer-nav').innerHTML=document.getElementById('sidebar-nav').innerHTML;
+  PAGES.forEach(p=>{const el=document.getElementById(`ni-drawer-nav-${p.id}`);if(el)el.onclick=()=>goTo(p.id);});
+}
+function closeDrawer(){ document.getElementById('drawer').classList.remove('open'); }
+function closeDrawerOutside(e){ if(e.target===document.getElementById('drawer'))closeDrawer(); }
+
+// ── PRODUCT SELECTS ────────────────────────────────────────────────────
+function rebuildProductSelects(){
+  const opts = S.products.map(p=>`<option value="${p.name}">${p.name} &mdash; ${Nraw(p.price)}</option>`).join('');
+  const bare = S.products.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
+  const fprod = document.getElementById('f-prod');
+  const dprod = document.getElementById('d-prod');
+  const flprod= document.getElementById('fl-prod');
+  if(fprod) fprod.innerHTML=opts;
+  if(dprod) dprod.innerHTML=bare;
+  if(flprod){
+    flprod.innerHTML='<option value="">All Products</option>'+bare;
+  }
+}
+
+// ── TRANSACTIONS ───────────────────────────────────────────────────────
+function submitTxn(){
+  const editId = document.getElementById('f-edit-id').value;
+  const prod   = document.getElementById('f-prod').value;
+  const qty    = Math.max(1,parseInt(document.getElementById('f-qty').value)||1);
+  const pay    = document.getElementById('f-pay').value;
+  const cust   = document.getElementById('f-cust').value.trim()||'Walk-in';
+  const isDebt = document.getElementById('f-debt').value;
+  const by     = document.getElementById('f-by').value.trim()||'—';
+  const date   = document.getElementById('f-date').value||today();
+  const price  = priceOf(prod);
+  const total  = price*qty;
+
+  if(editId){
+    // EDIT MODE
+    const idx = S.txns.findIndex(t=>t.id===editId);
+    if(idx===-1){toast('Transaction not found','err');return;}
+    const old = S.txns[idx];
+    // If was a debt, update the linked debt entry amount
+    if(old.isDebt==='Yes'){
+      syncDebtEntryEdit(old, {prod,qty,price,total,date});
+    }
+    S.txns[idx]={...old, prod, qty, price, total, pay, cust, isDebt, by, date};
+    // If newly marked as debt
+    if(isDebt==='Yes' && old.isDebt!=='Yes'){
+      attachDebtEntry(S.txns[idx]);
+    }
+    persist(); renderAll();
+    toast('Transaction updated');
+    cancelTxnEdit();
+  } else {
+    // ADD MODE
+    const id  = 'TXN-'+uid();
+    const tm  = nowt();
+    S.txns.unshift({id, date, time:tm, prod, qty, price, total, pay, cust, isDebt, by});
+    if(isDebt==='Yes'){
+      attachDebtEntry(S.txns[0]);
+    }
+    persist(); renderAll();
+    toast(id+' &mdash; '+N(total));
+    document.getElementById('f-qty').value=1;
+    document.getElementById('f-cust').value='';
+    document.getElementById('f-debt').value='No';
+  }
+}
+
+function attachDebtEntry(txn){
+  const cust = txn.cust;
+  const ex   = S.debts.find(d=>d.cust.toLowerCase()===cust.toLowerCase()&&d.status==='pending');
+  if(ex){
+    ex.owed+=txn.total;
+    ex.entries=ex.entries||[];
+    ex.entries.push({txnId:txn.id,date:txn.date,time:txn.time,prod:txn.prod,qty:txn.qty,amount:txn.total});
+  } else {
+    S.debts.unshift({
+      id:txn.id, date:txn.date, time:txn.time, cust, prod:txn.prod,
+      owed:txn.total, paid:0, status:'pending',
+      entries:[{txnId:txn.id,date:txn.date,time:txn.time,prod:txn.prod,qty:txn.qty,amount:txn.total}],
+      payments:[]
+    });
+  }
+}
+
+function syncDebtEntryEdit(old, updated){
+  // Find debt that has this txn as an entry and adjust amount
+  for(const d of S.debts){
+    if(!d.entries) continue;
+    const ei = d.entries.findIndex(e=>e.txnId===old.id);
+    if(ei!==-1){
+      const diff = updated.total - d.entries[ei].amount;
+      d.owed += diff;
+      d.entries[ei].amount = updated.total;
+      d.entries[ei].prod   = updated.prod;
+      d.entries[ei].qty    = updated.qty;
+      d.entries[ei].date   = updated.date;
+      // re-check status
+      if(d.paid >= d.owed) d.status='cleared';
+      else d.status='pending';
+      break;
+    }
+  }
+}
+
+function editTxn(id){
+  const t = S.txns.find(x=>x.id===id);
+  if(!t) return;
+  document.getElementById('f-edit-id').value = t.id;
+  document.getElementById('f-date').value    = t.date;
+  document.getElementById('f-prod').value    = t.prod;
+  document.getElementById('f-qty').value     = t.qty;
+  document.getElementById('f-pay').value     = t.pay;
+  document.getElementById('f-cust').value    = t.cust;
+  document.getElementById('f-debt').value    = t.isDebt;
+  document.getElementById('f-by').value      = t.by;
+  document.getElementById('txn-form-title').textContent = 'Editing: '+t.id;
+  document.getElementById('txn-submit-btn').textContent = 'Save Changes';
+  document.getElementById('txn-form-block').style.borderColor='var(--blue)';
+  document.getElementById('txn-form-block').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function cancelTxnEdit(){
+  document.getElementById('f-edit-id').value='';
+  document.getElementById('f-date').value=today();
+  document.getElementById('f-qty').value=1;
+  document.getElementById('f-cust').value='';
+  document.getElementById('f-by').value='';
+  document.getElementById('f-debt').value='No';
+  document.getElementById('txn-form-title').textContent='New Transaction';
+  document.getElementById('txn-submit-btn').textContent='Add Transaction';
+  document.getElementById('txn-form-block').style.borderColor='';
+}
+
+function delTxn(id){
+  const t = S.txns.find(x=>x.id===id);
+  if(!t) return;
+  showModal(
+    'Delete Transaction',
+    `<div class="modal-danger">This will permanently delete <strong>${t.id}</strong>.<br/><br/>
+    Product: ${t.prod}<br/>Qty: ${t.qty} &mdash; Total: ${Nraw(t.total)}<br/>Date: ${t.date}<br/>Customer: ${t.cust}
+    ${t.isDebt==='Yes'?'<br/><br/>&#x26A0; This was marked as a debt. The linked debt entry will also be removed.':''}
+    </div>`,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+     <button class="btn" style="background:var(--red);color:#fff" onclick="confirmDelTxn('${id}')">Delete</button>`
+  );
+}
+
+function confirmDelTxn(id){
+  const idx = S.txns.findIndex(t=>t.id===id);
+  if(idx===-1){closeModal();return;}
+  const t = S.txns[idx];
+  // Remove from linked debt
+  if(t.isDebt==='Yes'){
+    for(const d of S.debts){
+      if(!d.entries) continue;
+      const ei = d.entries.findIndex(e=>e.txnId===id);
+      if(ei!==-1){
+        d.owed -= d.entries[ei].amount;
+        d.entries.splice(ei,1);
+        if(d.owed<=0 || d.entries.length===0){
+          // Remove the whole debt record if no entries left
+          const di=S.debts.indexOf(d);
+          S.debts.splice(di,1);
+        } else if(d.paid>=d.owed){
+          d.status='cleared';
+        }
+        break;
+      }
+    }
+  }
+  S.txns.splice(idx,1);
+  persist(); renderAll(); closeModal();
+  toast('Transaction deleted','err');
+}
+
+function clearTxnFilters(){
+  document.getElementById('fl-date').value='';
+  document.getElementById('fl-prod').value='';
+  document.getElementById('fl-pay').value='';
+  renderTxnTable();
+}
+
+function txnFilter(){
+  const fd=document.getElementById('fl-date')?.value;
+  const fp=document.getElementById('fl-prod')?.value;
+  const fy=document.getElementById('fl-pay')?.value;
+  return S.txns.filter(t=>(!fd||t.date===fd)&&(!fp||t.prod===fp)&&(!fy||t.pay===fy));
+}
+
+// ── STOCK ──────────────────────────────────────────────────────────────
+function getStockDate(){ return document.getElementById('stock-date')?.value||today(); }
+
+function loadStockForDate(){
+  const d = getStockDate();
+  S.products.forEach(p=>{
+    const key=d+'::'+p.name;
+    const el=document.getElementById('si-'+p.name.replace(/ /g,'_'));
+    if(el) el.value = S.stock[key]!=null ? S.stock[key] : 0;
+  });
+}
+
+function buildStockInputs(){
+  const d = getStockDate();
+  document.getElementById('stock-inputs').innerHTML=S.products.map(p=>{
+    const key=d+'::'+p.name;
+    const val=S.stock[key]!=null?S.stock[key]:0;
+    return `<div class="f-group"><label class="f-label">${p.name}</label>
+    <input type="number" id="si-${p.name.replace(/ /g,'_')}" class="f-inp" value="${val}" min="0"/></div>`;
+  }).join('');
+}
+
+function saveStock(){
+  const d=getStockDate();
+  S.products.forEach(p=>{
+    const el=document.getElementById('si-'+p.name.replace(/ /g,'_'));
+    if(el) S.stock[d+'::'+p.name]=parseInt(el.value)||0;
+  });
+  persist(); renderAll(); toast('Stock saved for '+d);
+}
+
+function soldOfOnDate(prodName, date){
+  return S.txns.filter(t=>t.prod===prodName&&t.date===date).reduce((a,t)=>a+t.qty,0);
+}
+
+// ── DEBT ───────────────────────────────────────────────────────────────
+function checkDebtorName(){
+  const val=document.getElementById('d-name').value.trim().toLowerCase();
+  const warn=document.getElementById('d-name-warn');
+  if(!val){warn.style.display='none';return;}
+  const similar=S.debts.filter(d=>d.status==='pending'&&d.cust.toLowerCase().includes(val)&&d.cust.toLowerCase()!==val);
+  if(similar.length){
+    warn.textContent='Similar name exists: '+similar.map(d=>d.cust).join(', ')+'. Check spelling.';
+    warn.style.display='block';
+  } else {
+    warn.style.display='none';
+  }
+}
+
+function addDebt(){
+  const name=document.getElementById('d-name').value.trim();
+  const amt=parseFloat(document.getElementById('d-amt').value);
+  const date=document.getElementById('d-date').value||today();
+  if(!name||!amt){toast('Fill name and amount','err');return;}
+  const prod=document.getElementById('d-prod').value;
+  const tm=nowt();
+  const id='TXN-'+uid();
+  const ex=S.debts.find(d=>d.cust.toLowerCase()===name.toLowerCase()&&d.status==='pending');
+  if(ex){
+    ex.owed+=amt;
+    ex.entries=ex.entries||[];
+    ex.entries.push({txnId:id,date,time:tm,prod,qty:1,amount:amt});
+  } else {
+    S.debts.unshift({id,date,time:tm,cust:name,prod,owed:amt,paid:0,status:'pending',
+      entries:[{txnId:id,date,time:tm,prod,qty:1,amount:amt}],payments:[]});
+  }
+  persist(); renderAll();
+  toast('Debt added &mdash; '+name);
+  document.getElementById('d-name').value='';
+  document.getElementById('d-amt').value='';
+  document.getElementById('d-name-warn').style.display='none';
+}
+
+// Payment modal
+let activeDebtIdx=null;
+function markPaid(i){
+  activeDebtIdx=i;
+  const d=S.debts[i];
+  const bal=d.owed-d.paid;
+  showModal(
+    'Record Payment &mdash; '+d.cust,
+    `<div class="modal-info">Balance: <span style="color:var(--red);font-weight:600">${Nraw(bal)}</span></div>
+     <div class="f-group"><label class="f-label">Payment Amount (&#8358;)</label>
+       <input class="f-inp" type="number" id="modal-amt" placeholder="0" style="margin-top:4px"/>
+     </div>
+     <div class="f-group"><label class="f-label">Note (optional)</label>
+       <input class="f-inp" type="text" id="modal-note" placeholder="e.g. paid cash" style="margin-top:4px"/>
+     </div>`,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-acc" onclick="submitPayment()">Record Payment</button>`
+  );
+  setTimeout(()=>document.getElementById('modal-amt')?.focus(),100);
+}
+
+function submitPayment(){
+  if(activeDebtIdx===null) return;
+  const d=S.debts[activeDebtIdx];
+  const p=parseFloat(document.getElementById('modal-amt')?.value);
+  if(!p||isNaN(p)||p<=0){toast('Enter a valid amount','err');return;}
+  const note=document.getElementById('modal-note')?.value.trim()||'—';
+  d.paid=Math.min(d.paid+p,d.owed);
+  d.status=d.paid>=d.owed?'cleared':'pending';
+  d.payments=d.payments||[];
+  d.payments.push({date:today(),time:nowt(),amount:p,note});
+  persist(); renderAll(); closeModal();
+  toast('Payment: '+N(p));
+  activeDebtIdx=null;
+}
+
+function delDebt(i){
+  const d=S.debts[i];
+  showModal(
+    'Delete Debt Record',
+    `<div class="modal-danger">Delete debt for <strong>${d.cust}</strong>?<br/>
+    Owed: ${Nraw(d.owed)} &mdash; Paid: ${Nraw(d.paid)}<br/>Balance: ${Nraw(d.owed-d.paid)}<br/><br/>
+    This will NOT delete the original transactions.</div>`,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+     <button class="btn" style="background:var(--red);color:#fff" onclick="confirmDelDebt(${i})">Delete</button>`
+  );
+}
+
+function confirmDelDebt(i){
+  S.debts.splice(i,1);
+  persist(); renderAll(); closeModal();
+  toast('Debt record deleted','err');
+}
+
+// ── PRODUCTS ───────────────────────────────────────────────────────────
+function submitProduct(){
+  const editName = document.getElementById('pf-edit-name').value;
+  const name  = document.getElementById('pf-name').value.trim();
+  const price = parseFloat(document.getElementById('pf-price').value);
+  if(!name||!price||price<=0){toast('Name and price required','err');return;}
+
+  if(editName){
+    const idx=S.products.findIndex(p=>p.name===editName);
+    if(idx!==-1){
+      // Update name in all txns and debts if name changed
+      if(name!==editName){
+        S.txns.forEach(t=>{if(t.prod===editName)t.prod=name;});
+        S.debts.forEach(d=>{
+          if(d.prod===editName)d.prod=name;
+          (d.entries||[]).forEach(e=>{if(e.prod===editName)e.prod=name;});
+        });
+        // Update stock keys
+        const newStock={};
+        Object.entries(S.stock).forEach(([k,v])=>{
+          newStock[k.replace('::'+editName,'::'+name)]=v;
+        });
+        S.stock=newStock;
+      }
+      S.products[idx]={name,price};
+    }
+    toast('Product updated');
+  } else {
+    if(S.products.find(p=>p.name.toLowerCase()===name.toLowerCase())){
+      toast('Product already exists','err');return;
+    }
+    S.products.push({name,price});
+    toast('Product added');
+  }
+  persist(); renderAll(); cancelProductEdit();
+}
+
+function editProduct(name){
+  const p=S.products.find(x=>x.name===name);
+  if(!p) return;
+  document.getElementById('pf-edit-name').value=name;
+  document.getElementById('pf-name').value=name;
+  document.getElementById('pf-price').value=p.price;
+  document.getElementById('prod-form-title').textContent='Editing: '+name;
+}
+
+function cancelProductEdit(){
+  document.getElementById('pf-edit-name').value='';
+  document.getElementById('pf-name').value='';
+  document.getElementById('pf-price').value='';
+  document.getElementById('prod-form-title').textContent='Add Product';
+}
+
+function delProduct(name){
+  const used=S.txns.some(t=>t.prod===name);
+  showModal(
+    'Delete Product',
+    `<div class="${used?'modal-warn':'modal-danger'}">
+    ${used?`<strong>${name}</strong> has transactions recorded. Deleting it will NOT delete those transactions, but it will no longer appear in dropdowns.`
+         :`Permanently delete <strong>${name}</strong> from your product list?`}
+    </div>`,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-red" style="padding:8px 16px;font-size:.73rem;" onclick="confirmDelProduct('${name}')">Delete</button>`
+  );
+}
+
+function confirmDelProduct(name){
+  const idx=S.products.findIndex(p=>p.name===name);
+  if(idx!==-1) S.products.splice(idx,1);
+  persist(); renderAll(); closeModal();
+  toast(name+' deleted','err');
+}
+
+// ── DATA EXPORT / IMPORT ───────────────────────────────────────────────
+function exportJSON(){
+  const data=JSON.stringify(S,null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='club-tracker-backup-'+today()+'.json';
+  a.click();
+  toast('Backup downloaded');
+}
+
+function importJSON(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    showModal(
+      'Import Backup',
+      `<div class="modal-danger">&#x26A0; This will replace ALL current data with the backup file.<br/><br/>
+      File: <strong>${file.name}</strong><br/>
+      Make sure this is your intended backup.</div>`,
+      `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+       <button class="btn btn-acc" onclick="confirmImport('${encodeURIComponent(ev.target.result)}')">Yes, Import</button>`
+    );
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+function confirmImport(encoded){
+  try{
+    const parsed=JSON.parse(decodeURIComponent(encoded));
+    S=parsed;
+    if(!S.products||!S.products.length) S.products=[...DEFAULT_PRODUCTS];
+    persist(); renderAll(); closeModal();
+    toast('Data imported successfully');
+  }catch(err){
+    closeModal();
+    toast('Invalid backup file','err');
+  }
+}
+
+function nukeData(){
+  showModal(
+    'Wipe All Data',
+    `<div class="modal-danger">&#x26A0; This will permanently delete ALL transactions, debts, stock records, and product changes.<br/><br/>
+    You cannot undo this. Export a backup first if you want to keep your data.</div>`,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+     <button class="btn" style="background:var(--red);color:#fff;font-size:.73rem;padding:8px 16px;" onclick="confirmNuke()">Wipe Everything</button>`
+  );
+}
+
+function confirmNuke(){
+  S={txns:[],debts:[],stock:{},products:[...DEFAULT_PRODUCTS]};
+  persist(); renderAll(); closeModal();
+  toast('All data wiped','err');
+}
+
+// ── PDF EXPORT ─────────────────────────────────────────────────────────
+function exportPDF(pageId){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('print-target'));
+  document.getElementById('page-'+pageId)?.classList.add('print-target');
+  window.print();
+  document.getElementById('page-'+pageId)?.classList.remove('print-target');
+}
+
+// ── RENDER FUNCTIONS ───────────────────────────────────────────────────
+function renderSidebar(){
+  const all=S.txns;
+  const todayRev=all.filter(t=>t.date===today()).reduce((a,t)=>a+t.total,0);
+  const totalDebt=S.debts.filter(d=>d.status==='pending').reduce((a,d)=>a+(d.owed-d.paid),0);
+  document.getElementById('sidebar-kpi').innerHTML=`
+    <div class="kpi-row"><span class="kpi-lbl">Today</span><span class="kpi-val">${N(todayRev)}</span></div>
+    <div class="kpi-row"><span class="kpi-lbl">All Time</span><span class="kpi-val green">${N(all.reduce((a,t)=>a+t.total,0))}</span></div>
+    <div class="kpi-row"><span class="kpi-lbl">Outstanding</span><span class="kpi-val red">${N(totalDebt)}</span></div>
+    <div class="kpi-row"><span class="kpi-lbl">Txns</span><span class="kpi-val">${all.length}</span></div>`;
+}
+
+function renderDash(){
+  document.getElementById('dash-date').textContent=new Date().toLocaleDateString('en-NG',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const tt=S.txns.filter(t=>t.date===today());
+  const cash=tt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
+  const trans=tt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+  const pend=S.debts.filter(d=>d.status==='pending');
+  const allRev=S.txns.reduce((a,t)=>a+t.total,0);
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat-cell"><div class="stat-label">Today Revenue</div><div class="stat-value acc">${N(cash+trans)}</div></div>
+    <div class="stat-cell"><div class="stat-label">Cash</div><div class="stat-value grn">${N(cash)}</div></div>
+    <div class="stat-cell"><div class="stat-label">Transfer</div><div class="stat-value blu">${N(trans)}</div></div>
+    <div class="stat-cell"><div class="stat-label">Pending Debts</div><div class="stat-value amb">${N(pend.reduce((a,d)=>a+(d.owed-d.paid),0))}</div></div>`;
+  document.getElementById('dash-ledgers').innerHTML=S.products.map(p=>buildLedger(p.name,tt)).join('');
+}
+
+function buildLedger(prod,txns){
+  const pt=txns.filter(t=>t.prod===prod);
+  const units=pt.reduce((a,t)=>a+t.qty,0);
+  const cash=pt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
+  const trans=pt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+  return `<div class="prod-ledger">
+    <div class="pl-head"><div class="pl-name">${prod}</div><div class="pl-total">${N(cash+trans)}</div></div>
+    <div class="pl-body">
+      <div class="pl-cell"><div class="pl-cell-lbl">Units</div><div class="pl-cell-val">${units}</div></div>
+      <div class="pl-cell"><div class="pl-cell-lbl">Cash</div><div class="pl-cell-val" style="color:var(--green)">${N(cash)}</div></div>
+      <div class="pl-cell"><div class="pl-cell-lbl">Transfer</div><div class="pl-cell-val" style="color:var(--blue)">${N(trans)}</div></div>
+      <div class="pl-cell"><div class="pl-cell-lbl">Total</div><div class="pl-cell-val" style="color:var(--acc)">${N(cash+trans)}</div></div>
+    </div></div>`;
+}
+
+function renderTxnTable(){
+  rebuildProductSelects();
+  const rows=txnFilter();
+  const tb=document.getElementById('txn-body');
+  if(!rows.length){tb.innerHTML=`<tr><td colspan="12" class="empty-state">No transactions match the current filters.</td></tr>`;return;}
+  tb.innerHTML=rows.map(t=>`<tr>
+    <td class="txnid">${t.id}</td><td>${t.date}</td><td>${t.time||'—'}</td>
+    <td class="sans">${t.prod}</td><td>${t.qty}</td><td>${N(t.price)}</td>
+    <td class="mono-green">${N(t.total)}</td>
+    <td><span class="chip chip-${(t.pay||'').toLowerCase()}">${t.pay}</span></td>
+    <td class="sans">${t.cust}</td>
+    <td>${t.isDebt==='Yes'?'<span class="chip chip-debt">Debt</span>':'—'}</td>
+    <td>${t.by}</td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-blue" onclick="editTxn('${t.id}')">Edit</button>
+      <button class="btn btn-red" onclick="delTxn('${t.id}')" style="margin-left:4px">&#x2715;</button>
+    </td>
+  </tr>`).join('');
+}
+
+function renderStock(){
+  buildStockInputs();
+  const d=getStockDate();
+  document.getElementById('stock-body').innerHTML=S.products.map(p=>{
+    const key=d+'::'+p.name;
+    const open=S.stock[key]!=null?S.stock[key]:0;
+    const sold=soldOfOnDate(p.name,d);
+    const rem=Math.max(0,open-sold);
+    const val=rem*p.price;
+    const pct=open>0?rem/open:0;
+    const low=open>0&&rem<=Math.ceil(open*.15);
+    const col=low?'var(--red)':pct<.4?'var(--amber)':'var(--green)';
+    return `<tr>
+      <td class="sans" style="font-weight:600">${p.name}</td><td>${N(p.price)}</td>
+      <td>${open}</td><td>${sold}</td>
+      <td><span style="font-weight:600">${rem}</span>
+        <div class="sbar"><div class="sbar-fill" style="width:${Math.round(pct*100)}%;background:${col}"></div></div>
+      </td>
+      <td class="mono-green">${N(val)}</td>
+      <td><span class="chip ${low?'chip-low':'chip-ok'}">${low?'LOW':'OK'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderDebts(){
+  const pd=S.debts.filter(d=>d.status==='pending');
+  const cl=S.debts.filter(d=>d.status==='cleared');
+  document.getElementById('debt-stats').innerHTML=`
+    <div class="stat-cell"><div class="stat-label">Pending</div><div class="stat-value red">${pd.length}</div></div>
+    <div class="stat-cell"><div class="stat-label">Outstanding</div><div class="stat-value amb">${N(pd.reduce((a,d)=>a+(d.owed-d.paid),0))}</div></div>
+    <div class="stat-cell"><div class="stat-label">Cleared</div><div class="stat-value grn">${cl.length}</div></div>`;
+  const tb=document.getElementById('debt-body');
+  if(!S.debts.length){tb.innerHTML=`<tr><td colspan="10" class="empty-state">No debts recorded.</td></tr>`;return;}
+  tb.innerHTML=S.debts.map((d,i)=>{
+    const bal=d.owed-d.paid;
+    return `<tr>
+      <td class="txnid">${d.id}</td><td>${d.date}</td><td>${d.time||'—'}</td>
+      <td class="sans">${d.cust}</td><td class="sans">${d.prod}</td>
+      <td>${N(d.owed)}</td><td class="mono-green">${N(d.paid)}</td>
+      <td style="color:${bal>0?'var(--red)':'var(--green)'};font-weight:600">${N(bal)}</td>
+      <td><span class="chip chip-${d.status}">${d.status==='cleared'?'Cleared':'Pending'}</span></td>
+      <td style="white-space:nowrap">
+        ${d.status==='pending'?`<button class="btn btn-grn" onclick="markPaid(${i})">Pay</button>`:''}
+        <button class="btn btn-red" onclick="delDebt(${i})" style="margin-left:4px">&#x2715;</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderDebtors(){
+  const totalOwed=S.debts.reduce((a,d)=>a+d.owed,0);
+  const totalPaid=S.debts.reduce((a,d)=>a+d.paid,0);
+  const pending=S.debts.filter(d=>d.status==='pending').length;
+  document.getElementById('debtor-grand').innerHTML=`
+    <div class="dg-item"><div class="dg-lbl">Total Ever Owed</div><div class="dg-val" style="color:var(--amber)">${N(totalOwed)}</div></div>
+    <div class="dg-item"><div class="dg-lbl">Total Paid</div><div class="dg-val" style="color:var(--green)">${N(totalPaid)}</div></div>
+    <div class="dg-item"><div class="dg-lbl">Outstanding</div><div class="dg-val" style="color:var(--red)">${N(totalOwed-totalPaid)}</div></div>
+    <div class="dg-item"><div class="dg-lbl">Active Debtors</div><div class="dg-val" style="color:var(--acc)">${pending}</div></div>`;
+  if(!S.debts.length){
+    document.getElementById('debtor-cards').innerHTML=`<div class="empty-state" style="padding:36px 0">No debtors on record.</div>`;
+    return;
+  }
+  document.getElementById('debtor-cards').innerHTML=S.debts.map((d,i)=>{
+    const bal=d.owed-d.paid;
+    const entries=d.entries||[{txnId:d.id,date:d.date,time:d.time||'—',prod:d.prod,qty:'—',amount:d.owed}];
+    const payments=d.payments||[];
+    const byDay={};
+    entries.forEach(e=>{if(!byDay[e.date])byDay[e.date]=[];byDay[e.date].push(e);});
+    const daysHtml=Object.entries(byDay).sort((a,b)=>b[0].localeCompare(a[0])).map(([date,ents])=>{
+      const dayTotal=ents.reduce((a,e)=>a+e.amount,0);
+      return `<div class="debtor-day">
+        <div class="debtor-day-head">
+          <span class="debtor-day-date">${date}</span>
+          <span class="debtor-day-total">${N(dayTotal)}</span>
+        </div>
+        <div class="debtor-entries"><table>
+          <thead><tr><th>Txn ID</th><th>Time</th><th>Product</th><th>Qty</th><th>Amount</th></tr></thead>
+          <tbody>${ents.map(e=>`<tr>
+            <td class="txnid">${e.txnId}</td><td>${e.time||'—'}</td>
+            <td class="sans">${e.prod}</td><td>${e.qty}</td>
+            <td style="color:var(--amber)">${N(e.amount)}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+      </div>`;
+    }).join('');
+    const payHtml=payments.length?`<div class="pay-log">
+      <div class="pay-log-title">Payment History</div>
+      ${payments.map(p=>`<div class="pay-entry">
+        <span class="pay-entry-meta">${p.date}&nbsp;&nbsp;${p.time}&nbsp;&nbsp;&middot;&nbsp;&nbsp;${p.note}</span>
+        <span class="pay-entry-amt">+${N(p.amount)}</span>
+      </div>`).join('')}
+    </div>`:'';
+    return `<div class="debtor-card">
+      <div class="debtor-head" onclick="toggleDebtor(${i})">
+        <div class="debtor-name">${d.cust}</div>
+        <div class="debtor-meta">
+          <span class="debtor-owed ${d.status==='cleared'?'cleared':''}">${d.status==='cleared'?'CLEARED':N(bal)+' owed'}</span>
+          <span class="chip chip-${d.status}">${d.status}</span>
+          <span class="debtor-toggle" id="dbt-${i}">&#x25BC;</span>
+        </div>
+      </div>
+      <div class="debtor-body" id="db-${i}">
+        ${daysHtml}${payHtml}
+        ${d.status==='pending'?`<div class="debtor-actions"><button class="btn btn-grn" onclick="markPaid(${i})">Record Payment</button></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDebtor(i){
+  const body=document.getElementById('db-'+i);
+  const tog=document.getElementById('dbt-'+i);
+  const open=body.classList.toggle('open');
+  tog.innerHTML=open?'&#x25B2;':'&#x25BC;';
+}
+
+let curPeriod='day';
+function setPeriod(p,el){
+  curPeriod=p;
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active'); renderSummary();
+}
+function renderSummary(){
+  const now=new Date(),td=today();
+  const wk=new Date(now); wk.setDate(now.getDate()-now.getDay()+1);
+  const wkS=wk.toISOString().slice(0,10);
+  const mo=td.slice(0,7);
+  let txns=S.txns;
+  if(curPeriod==='day') txns=txns.filter(t=>t.date===td);
+  else if(curPeriod==='week') txns=txns.filter(t=>t.date>=wkS);
+  else if(curPeriod==='month') txns=txns.filter(t=>t.date.startsWith(mo));
+  const cash=txns.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
+  const trans=txns.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+  document.getElementById('sum-stats').innerHTML=`
+    <div class="stat-cell"><div class="stat-label">Revenue</div><div class="stat-value acc">${N(cash+trans)}</div></div>
+    <div class="stat-cell"><div class="stat-label">Cash</div><div class="stat-value grn">${N(cash)}</div></div>
+    <div class="stat-cell"><div class="stat-label">Transfer</div><div class="stat-value blu">${N(trans)}</div></div>`;
+  document.getElementById('sum-ledgers').innerHTML=S.products.map(p=>buildLedger(p.name,txns)).join('');
+}
+
+function renderProducts(){
+  rebuildProductSelects();
+  document.getElementById('prod-list').innerHTML=S.products.map(p=>`
+    <div class="prod-row">
+      <div class="prod-row-info">
+        <div class="prod-row-name">${p.name}</div>
+        <div class="prod-row-price">${N(p.price)} per unit</div>
+      </div>
+      <div class="prod-row-actions">
+        <button class="btn btn-blue btn-sm" onclick="editProduct('${p.name.replace(/'/g,"\\'")}')">Edit</button>
+        <button class="btn btn-red btn-sm" onclick="delProduct('${p.name.replace(/'/g,"\\'")}')">&#x2715;</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderDataPage(){
+  document.getElementById('data-summary').innerHTML=`
+    Transactions: <span style="color:var(--acc)">${S.txns.length}</span><br/>
+    Debt records: <span style="color:var(--acc)">${S.debts.length}</span><br/>
+    Products: <span style="color:var(--acc)">${S.products.length}</span><br/>
+    Stock snapshots: <span style="color:var(--acc)">${Object.keys(S.stock).length}</span><br/>
+    Last transaction: <span style="color:var(--acc)">${S.txns.length?S.txns[0].date+' at '+S.txns[0].time:'—'}</span>`;
+}
+
+function renderAll(){
+  rebuildProductSelects();
+  renderSidebar();
+  renderDash();
+  renderTxnTable();
+  renderStock();
+  renderDebts();
+  renderDebtors();
+  renderSummary();
+  renderProducts();
+  renderDataPage();
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────
+document.getElementById('f-date').value=today();
+document.getElementById('stock-date').value=today();
+document.getElementById('d-date').value=today();
+goTo('dashboard');
+</script>
+</body>
+</html>
