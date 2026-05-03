@@ -730,32 +730,92 @@ function txnFilter(){
 // ── STOCK ──────────────────────────────────────────────────────────────
 function getStockDate(){ return document.getElementById('stock-date')?.value||today(); }
 
+function getOpeningStock(prodName, date){
+  if(S.stock[date+'::'+prodName] != null) return S.stock[date+'::'+prodName];
+  const prev = Object.keys(S.stock)
+    .filter(k => k.endsWith('::'+prodName) && k.slice(0,10) < date)
+    .sort().reverse();
+  if(!prev.length) return 0;
+  const lastDate = prev[0].slice(0,10);
+  const lastOpening = S.stock[prev[0]];
+  const soldThatDay = soldOfOnDate(prodName, lastDate);
+  return Math.max(0, lastOpening - soldThatDay);
+}
+
 function loadStockForDate(){
   const d = getStockDate();
   S.products.forEach(p=>{
-    const key=d+'::'+p.name;
     const el=document.getElementById('si-'+p.name.replace(/ /g,'_'));
-    if(el) el.value = S.stock[key]!=null ? S.stock[key] : 0;
+    if(el) el.value = getOpeningStock(p.name, d);
   });
 }
 
 function buildStockInputs(){
   const d = getStockDate();
   document.getElementById('stock-inputs').innerHTML=S.products.map(p=>{
-    const key=d+'::'+p.name;
-    const val=S.stock[key]!=null?S.stock[key]:0;
-    return `<div class="f-group"><label class="f-label">${p.name}</label>
-    <input type="number" id="si-${p.name.replace(/ /g,'_')}" class="f-inp" value="${val}" min="0"/></div>`;
+    const val = getOpeningStock(p.name, d);
+    const isManual = S.stock[d+'::'+p.name] != null;
+    const tag = !isManual ? ' <span style="color:var(--t3);font-size:.55rem">(auto)</span>' : '';
+    return '<div class="f-group"><label class="f-label">'+p.name+tag+'</label>'
+      +'<input type="number" id="si-'+p.name.replace(/ /g,'_')+'" class="f-inp" value="'+val+'" min="0"/></div>';
   }).join('');
 }
 
+
 function saveStock(){
-  const d=getStockDate();
+  const d = getStockDate();
+  const newVals = {};
   S.products.forEach(p=>{
     const el=document.getElementById('si-'+p.name.replace(/ /g,'_'));
-    if(el) S.stock[d+'::'+p.name]=parseInt(el.value)||0;
+    if(el) newVals[p.name]=parseInt(el.value)||0;
   });
-  persist(); renderAll(); toast('Stock saved for '+d);
+  const hasExisting = S.products.some(p=>S.stock[d+'::'+p.name]!=null);
+  if(hasExisting){
+    const rows=S.products.map(p=>{
+      const cur=S.stock[d+'::'+p.name]!=null?S.stock[d+'::'+p.name]:getOpeningStock(p.name,d);
+      const nv=newVals[p.name];
+      return `<tr>
+        <td class="sans" style="padding:5px 8px;font-size:.75rem">${p.name}</td>
+        <td style="padding:5px 8px;font-family:var(--mono);font-size:.75rem">${cur}</td>
+        <td style="padding:5px 8px;font-family:var(--mono);font-size:.75rem">${nv}</td>
+        <td style="padding:5px 8px;font-family:var(--mono);font-size:.75rem;color:var(--green)">${cur+nv}</td>
+      </tr>`;
+    }).join('');
+    const nvEncoded = encodeURIComponent(JSON.stringify(newVals));
+    showModal(
+      'Update Stock — '+d,
+      `<div class="modal-info" style="margin-bottom:12px">Stock already set for this date. How do you want to apply the new values?</div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr>
+          <th style="padding:5px 8px;text-align:left;font-size:.58rem;color:var(--t2);text-transform:uppercase">Product</th>
+          <th style="padding:5px 8px;text-align:left;font-size:.58rem;color:var(--t2);text-transform:uppercase">Current</th>
+          <th style="padding:5px 8px;text-align:left;font-size:.58rem;color:var(--t2);text-transform:uppercase">Entered</th>
+          <th style="padding:5px 8px;text-align:left;font-size:.58rem;color:var(--t2);text-transform:uppercase">If Added</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>`,
+      `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+       <button class="btn btn-ghost" onclick="applyStock('overwrite','${d}','${nvEncoded}')">Overwrite</button>
+       <button class="btn btn-acc" onclick="applyStock('add','${d}','${nvEncoded}')">Add to Current</button>`
+    );
+  } else {
+    applyStock('overwrite', d, encodeURIComponent(JSON.stringify(newVals)));
+  }
+}
+
+function applyStock(mode, d, nvEncoded){
+  const newVals = JSON.parse(decodeURIComponent(nvEncoded));
+  S.products.forEach(p=>{
+    const key=d+'::'+p.name;
+    if(mode==='add'){
+      const cur=S.stock[key]!=null?S.stock[key]:getOpeningStock(p.name,d);
+      S.stock[key]=cur+(newVals[p.name]||0);
+    } else {
+      S.stock[key]=newVals[p.name]||0;
+    }
+  });
+  persist(); renderAll(); closeModal();
+  toast('Stock '+(mode==='add'?'added to':'saved for')+' '+d);
 }
 
 function soldOfOnDate(prodName, date){
@@ -1259,8 +1319,7 @@ function renderStock(){
   buildStockInputs();
   const d=getStockDate();
   document.getElementById('stock-body').innerHTML=S.products.map(p=>{
-    const key=d+'::'+p.name;
-    const open=S.stock[key]!=null?S.stock[key]:0;
+    const open=getOpeningStock(p.name,d);
     const sold=soldOfOnDate(p.name,d);
     const rem=Math.max(0,open-sold);
     const val=rem*p.price;
