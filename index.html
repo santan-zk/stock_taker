@@ -389,6 +389,8 @@ tbody tr:hover{background:rgba(255,255,255,.02);}
       </div>
       <div class="stat-row" id="sum-stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px;"></div>
       <div id="sum-ledgers"></div>
+      <div class="section-label" id="sum-debt-label" style="margin-top:24px">Debt Breakdown by Product</div>
+      <div id="sum-debt-breakdown"></div>
     </div>
 
     <!-- PRODUCTS -->
@@ -1461,6 +1463,51 @@ function renderSummary(){
     <div class="stat-cell"><div class="stat-label">Cash</div><div class="stat-value grn">${N(cash)}</div></div>
     <div class="stat-cell"><div class="stat-label">Transfer</div><div class="stat-value blu">${N(trans)}</div></div>`;
   document.getElementById('sum-ledgers').innerHTML=S.products.map(p=>buildLedger(p.name,txns)).join('');
+
+  // Debt breakdown by product
+  const periodDates=new Set(txns.map(t=>t.date));
+  const debtRows=S.products.map(p=>{
+    let units=0,owed=0,paid=0;
+    S.debts.filter(d=>d.status==='pending').forEach(d=>{
+      const ents=(d.entries||[]).filter(e=>e.prod===p.name&&(curPeriod==='all'||periodDates.has(e.date)));
+      if(!ents.length) return;
+      const entOwed=ents.reduce((a,e)=>a+e.amount,0);
+      const entQty=ents.reduce((a,e)=>a+(parseInt(e.qty)||0),0);
+      const paidProp=d.owed>0?(d.paid/d.owed):0;
+      units+=entQty; owed+=entOwed; paid+=entOwed*paidProp;
+    });
+    return {name:p.name,units,owed,paid,bal:owed-paid};
+  }).filter(r=>r.owed>0);
+
+  const label=document.getElementById('sum-debt-label');
+  const bEl=document.getElementById('sum-debt-breakdown');
+  if(!debtRows.length){
+    if(label)label.style.display='none';
+    if(bEl)bEl.innerHTML='';
+    return;
+  }
+  if(label)label.style.display='';
+  const tOwed=debtRows.reduce((a,r)=>a+r.owed,0);
+  const tPaid=debtRows.reduce((a,r)=>a+r.paid,0);
+  const tBal=debtRows.reduce((a,r)=>a+r.bal,0);
+  bEl.innerHTML='<div class="tbl-wrap"><table>'
+    +'<thead><tr><th>Product</th><th>Units on Debt</th><th>Total Owed</th><th>Paid So Far</th><th>Outstanding</th></tr></thead>'
+    +'<tbody>'
+    +debtRows.map(r=>'<tr>'
+      +'<td class="sans" style="font-weight:600">'+r.name+'</td>'
+      +'<td>'+r.units+'</td>'
+      +'<td style="color:var(--amber)">'+Nraw(r.owed)+'</td>'
+      +'<td style="color:var(--green)">'+Nraw(r.paid)+'</td>'
+      +'<td style="color:'+(r.bal>0?'var(--red)':'var(--green)')+';font-weight:600">'+Nraw(r.bal)+'</td>'
+      +'</tr>').join('')
+    +'<tr style="border-top:1px solid var(--line2)">'
+      +'<td style="font-weight:600;font-family:var(--mono);font-size:.7rem;color:var(--t2)">TOTAL</td>'
+      +'<td></td>'
+      +'<td style="color:var(--amber);font-weight:600">'+Nraw(tOwed)+'</td>'
+      +'<td style="color:var(--green);font-weight:600">'+Nraw(tPaid)+'</td>'
+      +'<td style="color:'+(tBal>0?'var(--red)':'var(--green)')+';font-weight:600">'+Nraw(tBal)+'</td>'
+      +'</tr>'
+    +'</tbody></table></div>';
 }
 
 function renderProducts(){
