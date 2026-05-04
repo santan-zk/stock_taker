@@ -232,6 +232,56 @@ tbody tr:hover{background:rgba(255,255,255,.02);}
   thead th{background:#eee!important;}
   .page-header{border-color:#ddd!important;}
 }
+
+/* SUPPLIER GROUPS */
+.sup-group{background:var(--s1);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:24px;}
+.sup-group-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--s2);border-bottom:1px solid var(--line);flex-wrap:wrap;gap:10px;}
+.sup-group-name{font-family:var(--mono);font-size:.9rem;font-weight:600;letter-spacing:-.01em;}
+.sup-group-total{font-family:var(--mono);font-size:.9rem;color:var(--acc);font-weight:600;}
+.sup-group-body{padding:16px 18px;display:flex;flex-direction:column;gap:10px;}
+.sup-group-totals{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden;margin-top:4px;}
+.sup-group-totals .stat-cell{background:var(--s2);}
+.sup-debt-table{margin-top:4px;}
+.sup-debt-head{font-family:var(--mono);font-size:.62rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;margin-top:16px;}
+
+/* CALENDAR */
+.cal-nav{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.cal-month-label{font-family:var(--mono);font-size:.9rem;font-weight:600;flex:1;text-align:center;}
+.cal-legend{display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap;}
+.cal-legend-item{display:flex;align-items:center;gap:6px;font-size:.65rem;color:var(--t2);}
+.cal-swatch{width:12px;height:12px;border-radius:2px;display:inline-block;background:var(--s3);}
+.cal-grid-wrap{background:var(--s1);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:20px;}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);background:var(--s2);border-bottom:1px solid var(--line);}
+.cal-dow-row span{text-align:center;padding:8px 4px;font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);font-family:var(--mono);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--line);}
+.cal-cell{background:var(--s1);min-height:72px;padding:8px;cursor:pointer;transition:all .15s;position:relative;display:flex;flex-direction:column;gap:4px;}
+.cal-cell:hover{background:var(--s2);}
+.cal-cell.empty{background:var(--bg);cursor:default;}
+.cal-cell.today{outline:2px solid var(--acc);outline-offset:-2px;}
+.cal-cell.selected{background:var(--acc-dim);}
+.cal-cell.has-debt::after{content:'';position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--amber);border:1px solid rgba(255,170,0,.5);}
+.cal-day-num{font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--t2);}
+.cal-cell.today .cal-day-num{color:var(--acc);}
+.cal-day-rev{font-family:var(--mono);font-size:.68rem;color:var(--green);font-weight:600;}
+.cal-day-txns{font-size:.58rem;color:var(--t3);}
+.cal-day-bar{height:3px;border-radius:2px;margin-top:auto;width:100%;}
+
+/* Detail panel */
+.cal-detail{background:var(--s1);border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+.cal-detail-head{display:flex;justify-content:space-between;align-items:flex-start;padding:16px 18px;background:var(--s2);border-bottom:1px solid var(--line);}
+.cal-detail-date{font-family:var(--mono);font-size:.95rem;font-weight:600;}
+.cal-detail-sub{font-size:.7rem;color:var(--t2);margin-top:3px;}
+.cal-detail-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border-bottom:1px solid var(--line);}
+.cal-detail-body{padding:16px 18px;}
+.cal-sect-label{font-family:var(--mono);font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--t2);margin-bottom:10px;margin-top:16px;}
+.cal-sect-label:first-child{margin-top:0;}
+
+@media(max-width:600px){
+  .cal-cell{min-height:52px;padding:5px;}
+  .cal-day-rev{font-size:.6rem;}
+  .cal-day-txns{display:none;}
+  .cal-detail-stats{grid-template-columns:repeat(2,1fr);}
+}
 </style>
 </head>
 <body>
@@ -379,7 +429,7 @@ tbody tr:hover{background:rgba(255,255,255,.02);}
     <div class="page" id="page-summary">
       <div class="page-header">
         <div><div class="page-title">Summary</div><div class="page-sub">Revenue by period and product</div></div>
-        <div class="header-actions"><button class="btn btn-pdf" onclick="exportPDF('summary')">&#x2B07; PDF</button></div>
+        <div class="header-actions"><button class="btn btn-pdf" onclick="exportPDF('summary')">&#x2B07; Full PDF</button></div>
       </div>
       <div class="period-row">
         <button class="period-btn active" onclick="setPeriod('day',this)">Today</button>
@@ -387,10 +437,8 @@ tbody tr:hover{background:rgba(255,255,255,.02);}
         <button class="period-btn" onclick="setPeriod('month',this)">This Month</button>
         <button class="period-btn" onclick="setPeriod('all',this)">All Time</button>
       </div>
-      <div class="stat-row" id="sum-stats" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px;"></div>
-      <div id="sum-ledgers"></div>
-      <div class="section-label" id="sum-debt-label" style="margin-top:24px">Debt Breakdown by Product</div>
-      <div id="sum-debt-breakdown"></div>
+      <div class="stat-row" id="sum-stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px;"></div>
+      <div id="sum-groups"></div>
     </div>
 
     <!-- PRODUCTS -->
@@ -446,6 +494,44 @@ tbody tr:hover{background:rgba(255,255,255,.02);}
       </div>
     </div>
 
+
+    <!-- CALENDAR -->
+    <div class="page" id="page-calendar">
+      <div class="page-header">
+        <div><div class="page-title">Calendar</div><div class="page-sub">Revenue heatmap — click any day to drill in</div></div>
+      </div>
+      <div class="cal-nav">
+        <button class="btn btn-ghost btn-sm" onclick="calShift(-1)">&#x2190; Prev</button>
+        <span class="cal-month-label" id="cal-month-label"></span>
+        <button class="btn btn-ghost btn-sm" onclick="calShift(1)">Next &#x2192;</button>
+        <button class="btn btn-ghost btn-sm" onclick="calGoToday()">Today</button>
+      </div>
+      <div class="cal-legend">
+        <span class="cal-legend-item"><span class="cal-swatch" style="background:var(--s3)"></span>No sales</span>
+        <span class="cal-legend-item"><span class="cal-swatch" style="background:#1a4a2e"></span>Low</span>
+        <span class="cal-legend-item"><span class="cal-swatch" style="background:#1a6e40"></span>Mid</span>
+        <span class="cal-legend-item"><span class="cal-swatch" style="background:#2dce89"></span>High</span>
+        <span class="cal-legend-item"><span class="cal-swatch" style="background:rgba(255,170,0,.25);border:1px solid var(--amber)"></span>Has debt</span>
+      </div>
+      <div class="cal-grid-wrap">
+        <div class="cal-dow-row">
+          <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+      <!-- Day detail panel -->
+      <div class="cal-detail" id="cal-detail" style="display:none">
+        <div class="cal-detail-head">
+          <div>
+            <div class="cal-detail-date" id="cal-detail-date"></div>
+            <div class="cal-detail-sub" id="cal-detail-sub"></div>
+          </div>
+          <button class="modal-close" onclick="closeCalDetail()">&#x2715;</button>
+        </div>
+        <div class="cal-detail-stats" id="cal-detail-stats"></div>
+        <div class="cal-detail-body" id="cal-detail-body"></div>
+      </div>
+    </div>
   </div></div>
 </div>
 
@@ -524,6 +610,7 @@ const PAGES=[
   {id:'summary',     label:'Summary'},
   {id:'products',    label:'Products'},
   {id:'data',        label:'Data & Backup'},
+  {id:'calendar',    label:'Calendar'},
 ];
 function buildNav(cid){
   document.getElementById(cid).innerHTML='<div class="nav-section">Menu</div>'+
@@ -537,6 +624,7 @@ function goTo(id){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.querySelectorAll(`[id$="-${id}"]`).forEach(n=>{if(n.classList.contains('nav-item'))n.classList.add('active');});
   closeDrawer(); renderAll();
+  if(id==='calendar') renderCalendar();
 }
 function toggleDrawer(){
   document.getElementById('drawer').classList.toggle('open');
@@ -1447,6 +1535,77 @@ function setPeriod(p,el){
   document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active'); renderSummary();
 }
+// Supplier groups config
+const SUPPLIER_GROUPS=[
+  {name:'Suntory',    products:['Lucozade 25cl','Lucozade 45cl','Ribena']},
+  {name:'Water & Soft Drinks', products:['Water 50cl','Soft Drink 50cl']},
+];
+
+function getDebtStatsForProduct(prodName, periodDates){
+  let units=0,owed=0,paid=0;
+  S.debts.filter(d=>d.status==='pending').forEach(d=>{
+    const ents=(d.entries||[]).filter(e=>e.prod===prodName&&(curPeriod==='all'||periodDates.has(e.date)));
+    if(!ents.length) return;
+    const entOwed=ents.reduce((a,e)=>a+e.amount,0);
+    const entQty=ents.reduce((a,e)=>a+(parseInt(e.qty)||0),0);
+    const paidProp=d.owed>0?(d.paid/d.owed):0;
+    units+=entQty; owed+=entOwed; paid+=entOwed*paidProp;
+  });
+  return {units,owed,paid,bal:owed-paid};
+}
+
+function buildGroupHTML(group, txns, periodDates, idx){
+  // only include products that exist in S.products
+  const prods=group.products.filter(p=>S.products.find(x=>x.name===p));
+  if(!prods.length) return '';
+
+  const gtxns=txns.filter(t=>prods.includes(t.prod));
+  const gCash=gtxns.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
+  const gTrans=gtxns.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+  const gDebt=prods.reduce((a,p)=>{const d=getDebtStatsForProduct(p,periodDates);return a+d.bal;},0);
+  const gTotal=gCash+gTrans;
+
+  // per-product ledger rows
+  const ledgers=prods.map(p=>buildLedger(p,txns)).join('');
+
+  // debt table for this group
+  const debtRows=prods.map(p=>({name:p,...getDebtStatsForProduct(p,periodDates)})).filter(r=>r.owed>0);
+  const debtHTML=debtRows.length
+    ?'<div class="sup-debt-head">Debt Breakdown</div>'
+     +'<div class="tbl-wrap"><table>'
+     +'<thead><tr><th>Product</th><th>Units on Debt</th><th>Owed</th><th>Paid</th><th>Outstanding</th></tr></thead>'
+     +'<tbody>'
+     +debtRows.map(r=>'<tr>'
+       +'<td class="sans" style="font-weight:600">'+r.name+'</td>'
+       +'<td>'+r.units+'</td>'
+       +'<td style="color:var(--amber)">'+Nraw(r.owed)+'</td>'
+       +'<td style="color:var(--green)">'+Nraw(r.paid)+'</td>'
+       +'<td style="color:'+(r.bal>0?'var(--red)':'var(--green)')+';font-weight:600">'+Nraw(r.bal)+'</td>'
+       +'</tr>').join('')
+     +'</tbody></table></div>'
+    :'';
+
+  return '<div class="sup-group" id="sup-group-'+idx+'">'
+    +'<div class="sup-group-head">'
+      +'<span class="sup-group-name">'+group.name+'</span>'
+      +'<div style="display:flex;gap:10px;align-items:center">'
+        +'<span class="sup-group-total">'+Nraw(gTotal)+'</span>'
+        +'<button class="btn btn-pdf" onclick="exportGroupPDF('+idx+')">&#x2B07; Print</button>'
+      +'</div>'
+    +'</div>'
+    +'<div class="sup-group-body">'
+      +'<div class="sup-group-totals">'
+        +'<div class="stat-cell"><div class="stat-label">Revenue</div><div class="stat-value acc">'+Nraw(gTotal)+'</div></div>'
+        +'<div class="stat-cell"><div class="stat-label">Cash</div><div class="stat-value grn">'+Nraw(gCash)+'</div></div>'
+        +'<div class="stat-cell"><div class="stat-label">Transfer</div><div class="stat-value blu">'+Nraw(gTrans)+'</div></div>'
+        +'<div class="stat-cell"><div class="stat-label">Debt Outstanding</div><div class="stat-value '+(gDebt>0?'red':'grn')+'">'+Nraw(gDebt)+'</div></div>'
+      +'</div>'
+      +ledgers
+      +debtHTML
+    +'</div>'
+    +'</div>';
+}
+
 function renderSummary(){
   const now=new Date(),td=today();
   const wk=new Date(now); wk.setDate(now.getDate()-now.getDay()+1);
@@ -1456,58 +1615,118 @@ function renderSummary(){
   if(curPeriod==='day') txns=txns.filter(t=>t.date===td);
   else if(curPeriod==='week') txns=txns.filter(t=>t.date>=wkS);
   else if(curPeriod==='month') txns=txns.filter(t=>t.date.startsWith(mo));
+  const periodDates=new Set(txns.map(t=>t.date));
   const cash=txns.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
   const trans=txns.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
-  document.getElementById('sum-stats').innerHTML=`
-    <div class="stat-cell"><div class="stat-label">Revenue</div><div class="stat-value acc">${N(cash+trans)}</div></div>
-    <div class="stat-cell"><div class="stat-label">Cash</div><div class="stat-value grn">${N(cash)}</div></div>
-    <div class="stat-cell"><div class="stat-label">Transfer</div><div class="stat-value blu">${N(trans)}</div></div>`;
-  document.getElementById('sum-ledgers').innerHTML=S.products.map(p=>buildLedger(p.name,txns)).join('');
+  const totalDebt=S.debts.filter(d=>d.status==='pending').reduce((a,d)=>a+(d.owed-d.paid),0);
+  document.getElementById('sum-stats').innerHTML=
+    '<div class="stat-cell"><div class="stat-label">Total Revenue</div><div class="stat-value acc">'+Nraw(cash+trans)+'</div></div>'
+    +'<div class="stat-cell"><div class="stat-label">Cash</div><div class="stat-value grn">'+Nraw(cash)+'</div></div>'
+    +'<div class="stat-cell"><div class="stat-label">Transfer</div><div class="stat-value blu">'+Nraw(trans)+'</div></div>'
+    +'<div class="stat-cell"><div class="stat-label">Debt Outstanding</div><div class="stat-value red">'+Nraw(totalDebt)+'</div></div>';
 
-  // Debt breakdown by product
+  // Find products not in any group and make an "Other" group
+  const groupedProds=SUPPLIER_GROUPS.flatMap(g=>g.products);
+  const ungrouped=S.products.map(p=>p.name).filter(n=>!groupedProds.includes(n));
+  const allGroups=[...SUPPLIER_GROUPS];
+  if(ungrouped.length) allGroups.push({name:'Other',products:ungrouped});
+
+  document.getElementById('sum-groups').innerHTML=allGroups.map((g,i)=>buildGroupHTML(g,txns,periodDates,i)).join('');
+}
+
+function exportGroupPDF(idx){
+  const now=new Date(),td=today();
+  const wk=new Date(now); wk.setDate(now.getDate()-now.getDay()+1);
+  const wkS=wk.toISOString().slice(0,10);
+  const mo=td.slice(0,7);
+  let txns=S.txns;
+  if(curPeriod==='day') txns=txns.filter(t=>t.date===td);
+  else if(curPeriod==='week') txns=txns.filter(t=>t.date>=wkS);
+  else if(curPeriod==='month') txns=txns.filter(t=>t.date.startsWith(mo));
   const periodDates=new Set(txns.map(t=>t.date));
-  const debtRows=S.products.map(p=>{
-    let units=0,owed=0,paid=0;
-    S.debts.filter(d=>d.status==='pending').forEach(d=>{
-      const ents=(d.entries||[]).filter(e=>e.prod===p.name&&(curPeriod==='all'||periodDates.has(e.date)));
-      if(!ents.length) return;
-      const entOwed=ents.reduce((a,e)=>a+e.amount,0);
-      const entQty=ents.reduce((a,e)=>a+(parseInt(e.qty)||0),0);
-      const paidProp=d.owed>0?(d.paid/d.owed):0;
-      units+=entQty; owed+=entOwed; paid+=entOwed*paidProp;
-    });
-    return {name:p.name,units,owed,paid,bal:owed-paid};
-  }).filter(r=>r.owed>0);
 
-  const label=document.getElementById('sum-debt-label');
-  const bEl=document.getElementById('sum-debt-breakdown');
-  if(!debtRows.length){
-    if(label)label.style.display='none';
-    if(bEl)bEl.innerHTML='';
-    return;
-  }
-  if(label)label.style.display='';
-  const tOwed=debtRows.reduce((a,r)=>a+r.owed,0);
-  const tPaid=debtRows.reduce((a,r)=>a+r.paid,0);
-  const tBal=debtRows.reduce((a,r)=>a+r.bal,0);
-  bEl.innerHTML='<div class="tbl-wrap"><table>'
-    +'<thead><tr><th>Product</th><th>Units on Debt</th><th>Total Owed</th><th>Paid So Far</th><th>Outstanding</th></tr></thead>'
-    +'<tbody>'
-    +debtRows.map(r=>'<tr>'
-      +'<td class="sans" style="font-weight:600">'+r.name+'</td>'
-      +'<td>'+r.units+'</td>'
-      +'<td style="color:var(--amber)">'+Nraw(r.owed)+'</td>'
-      +'<td style="color:var(--green)">'+Nraw(r.paid)+'</td>'
-      +'<td style="color:'+(r.bal>0?'var(--red)':'var(--green)')+';font-weight:600">'+Nraw(r.bal)+'</td>'
-      +'</tr>').join('')
-    +'<tr style="border-top:1px solid var(--line2)">'
-      +'<td style="font-weight:600;font-family:var(--mono);font-size:.7rem;color:var(--t2)">TOTAL</td>'
-      +'<td></td>'
-      +'<td style="color:var(--amber);font-weight:600">'+Nraw(tOwed)+'</td>'
-      +'<td style="color:var(--green);font-weight:600">'+Nraw(tPaid)+'</td>'
-      +'<td style="color:'+(tBal>0?'var(--red)':'var(--green)')+';font-weight:600">'+Nraw(tBal)+'</td>'
-      +'</tr>'
-    +'</tbody></table></div>';
+  const allGroups=[...SUPPLIER_GROUPS];
+  const groupedProds=SUPPLIER_GROUPS.flatMap(g=>g.products);
+  const ungrouped=S.products.map(p=>p.name).filter(n=>!groupedProds.includes(n));
+  if(ungrouped.length) allGroups.push({name:'Other',products:ungrouped});
+
+  const group=allGroups[idx];
+  const prods=group.products.filter(p=>S.products.find(x=>x.name===p));
+  const gtxns=txns.filter(t=>prods.includes(t.prod));
+  const gCash=gtxns.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
+  const gTrans=gtxns.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+
+  const periodLabel={'day':'Today','week':'This Week','month':'This Month','all':'All Time'}[curPeriod]||'';
+
+  const prodRows=prods.map(p=>{
+    const pt=gtxns.filter(t=>t.prod===p);
+    const units=pt.reduce((a,t)=>a+t.qty,0);
+    const pc=pt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
+    const pt2=pt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+    const ds=getDebtStatsForProduct(p,periodDates);
+    return {name:p,units,cash:pc,trans:pt2,total:pc+pt2,debt:ds};
+  });
+
+  const debtRows=prodRows.filter(r=>r.debt.owed>0);
+
+  const html='<!DOCTYPE html><html><head>'
+    +'<meta charset="UTF-8"/>'
+    +'<title>'+group.name+' — '+periodLabel+'</title>'
+    +'<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>'
+    +'<style>'+PDF_CSS+'</style>'
+    +'</head><body>'
+    +'<h1>'+group.name.toUpperCase()+'</h1>'
+    +'<div class="sub">Period: '+periodLabel+' &nbsp;·&nbsp; Generated '+new Date().toLocaleString('en-NG')+'</div>'
+
+    // Grand totals
+    +'<div class="grand">'
+      +'<div class="grand-item"><div class="grand-lbl">Total Revenue</div><div class="grand-val">'+Nraw(gCash+gTrans)+'</div></div>'
+      +'<div class="grand-item"><div class="grand-lbl">Cash</div><div class="grand-val" style="color:#1a8a55">'+Nraw(gCash)+'</div></div>'
+      +'<div class="grand-item"><div class="grand-lbl">Transfer</div><div class="grand-val" style="color:#2255cc">'+Nraw(gTrans)+'</div></div>'
+    +'</div>'
+
+    // Per-product breakdown
+    +'<div class="section-title">Sales by Product</div>'
+    +prodRows.map(r=>'<div class="prod-block">'
+      +'<div class="prod-head"><span>'+r.name+'</span><span>'+Nraw(r.total)+'</span></div>'
+      +'<div class="prod-body">'
+        +'<div class="prod-cell"><div class="prod-cell-lbl">Units Sold</div><div class="prod-cell-val">'+r.units+'</div></div>'
+        +'<div class="prod-cell"><div class="prod-cell-lbl">Cash</div><div class="prod-cell-val">'+Nraw(r.cash)+'</div></div>'
+        +'<div class="prod-cell"><div class="prod-cell-lbl">Transfer</div><div class="prod-cell-val">'+Nraw(r.trans)+'</div></div>'
+        +'<div class="prod-cell"><div class="prod-cell-lbl">Total</div><div class="prod-cell-val">'+Nraw(r.total)+'</div></div>'
+      +'</div>'
+    +'</div>').join('')
+
+    // Debt section
+    +(debtRows.length
+      ?'<div class="section-title" style="margin-top:24px">Debt Breakdown</div>'
+       +'<table>'
+       +'<thead><tr><th>Product</th><th>Units on Debt</th><th>Owed</th><th>Paid</th><th>Outstanding</th></tr></thead>'
+       +'<tbody>'
+       +debtRows.map(r=>'<tr>'
+         +'<td class="sans">'+r.name+'</td>'
+         +'<td>'+r.debt.units+'</td>'
+         +'<td>'+Nraw(r.debt.owed)+'</td>'
+         +'<td>'+Nraw(r.debt.paid)+'</td>'
+         +'<td style="font-weight:600">'+Nraw(r.debt.bal)+'</td>'
+       +'</tr>').join('')
+       +'<tr><td style="font-weight:600">TOTAL</td><td></td>'
+         +'<td>'+Nraw(debtRows.reduce((a,r)=>a+r.debt.owed,0))+'</td>'
+         +'<td>'+Nraw(debtRows.reduce((a,r)=>a+r.debt.paid,0))+'</td>'
+         +'<td style="font-weight:600">'+Nraw(debtRows.reduce((a,r)=>a+r.debt.bal,0))+'</td>'
+       +'</tr>'
+       +'</tbody></table>'
+      :'<div style="margin-top:16px;font-size:.78rem;color:#666">No outstanding debts for this period.</div>')
+
+    +'<script>window.onload=()=>window.print();<\/script>'
+    +'</body></html>';
+
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.target='_blank';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
 }
 
 function renderProducts(){
@@ -1536,6 +1755,7 @@ function renderDataPage(){
 
 function renderAll(){
   rebuildProductSelects();
+  if(document.getElementById("page-calendar").classList.contains("active")) renderCalendar();
   renderSidebar();
   renderDash();
   renderTxnTable();
@@ -1552,6 +1772,201 @@ document.getElementById('f-date').value=today();
 document.getElementById('stock-date').value=today();
 document.getElementById('d-date').value=today();
 goTo('dashboard');
+
+// ── CALENDAR ───────────────────────────────────────────────────────────
+let calYear=new Date().getFullYear();
+let calMonth=new Date().getMonth(); // 0-indexed
+let calSelected=null;
+
+function calShift(dir){
+  calMonth+=dir;
+  if(calMonth>11){calMonth=0;calYear++;}
+  if(calMonth<0){calMonth=11;calYear--;}
+  renderCalendar();
+}
+function calGoToday(){
+  calYear=new Date().getFullYear();
+  calMonth=new Date().getMonth();
+  renderCalendar();
+}
+
+function renderCalendar(){
+  const td=today();
+  const monthStr=String(calMonth+1).padStart(2,'0');
+  const prefix=calYear+'-'+monthStr;
+  const label=new Date(calYear,calMonth,1).toLocaleDateString('en-NG',{month:'long',year:'numeric'});
+  document.getElementById('cal-month-label').textContent=label;
+
+  // Build per-day stats
+  const dayStats={};
+  S.txns.filter(t=>t.date.startsWith(prefix)).forEach(t=>{
+    if(!dayStats[t.date]) dayStats[t.date]={rev:0,cash:0,trans:0,txns:0,debtAmt:0};
+    dayStats[t.date].rev+=t.total;
+    dayStats[t.date].txns++;
+    if(t.pay==='Cash') dayStats[t.date].cash+=t.total;
+    else dayStats[t.date].trans+=t.total;
+  });
+  // Mark days with pending debt entries
+  S.debts.filter(d=>d.status==='pending').forEach(d=>{
+    (d.entries||[]).filter(e=>e.date.startsWith(prefix)).forEach(e=>{
+      if(!dayStats[e.date]) dayStats[e.date]={rev:0,cash:0,trans:0,txns:0,debtAmt:0};
+      dayStats[e.date].debtAmt+=e.amount;
+    });
+  });
+
+  const maxRev=Math.max(...Object.values(dayStats).map(d=>d.rev),1);
+
+  // Calendar grid
+  const firstDay=new Date(calYear,calMonth,1);
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  // Monday=0 offset
+  let startOffset=(firstDay.getDay()+6)%7;
+
+  let cells='';
+  // Empty cells before
+  for(let i=0;i<startOffset;i++) cells+='<div class="cal-cell empty"></div>';
+
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=prefix+'-'+String(d).padStart(2,'0');
+    const ds=dayStats[dateStr];
+    const isToday=dateStr===td;
+    const isSel=dateStr===calSelected;
+    const hasDebt=ds&&ds.debtAmt>0;
+    let bg='var(--s1)';
+    let barW=0;
+    if(ds&&ds.rev>0){
+      const pct=ds.rev/maxRev;
+      if(pct<0.33) bg='#1a4a2e';
+      else if(pct<0.66) bg='#1a6e40';
+      else bg='rgba(45,206,137,.25)';
+      barW=Math.round(pct*100);
+    }
+    cells+=`<div class="cal-cell${isToday?' today':''}${isSel?' selected':''}${hasDebt?' has-debt':''}"
+      style="background:${bg}" onclick="selectCalDay('${dateStr}')">
+      <div class="cal-day-num">${d}</div>
+      ${ds&&ds.rev>0?`<div class="cal-day-rev">${Nraw(ds.rev)}</div><div class="cal-day-txns">${ds.txns} txn${ds.txns!==1?'s':''}</div>`:''}
+      ${barW>0?`<div class="cal-day-bar" style="background:var(--green);opacity:.5;width:${barW}%"></div>`:''}
+    </div>`;
+  }
+
+  document.getElementById('cal-grid').innerHTML=cells;
+
+  // Re-render detail if a day is selected
+  if(calSelected&&calSelected.startsWith(prefix)) renderCalDetail(calSelected);
+  else closeCalDetail();
+}
+
+function selectCalDay(dateStr){
+  calSelected=dateStr;
+  renderCalendar();
+  renderCalDetail(dateStr);
+}
+
+function closeCalDetail(){
+  calSelected=null;
+  document.getElementById('cal-detail').style.display='none';
+  // Deselect cells
+  document.querySelectorAll('.cal-cell.selected').forEach(c=>c.classList.remove('selected'));
+}
+
+function renderCalDetail(dateStr){
+  const el=document.getElementById('cal-detail');
+  el.style.display='block';
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  const dayTxns=S.txns.filter(t=>t.date===dateStr);
+  const cash=dayTxns.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
+  const trans=dayTxns.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+  const dayDebts=S.debts.filter(d=>d.status==='pending'&&(d.entries||[]).some(e=>e.date===dateStr));
+  const debtAmt=dayDebts.reduce((a,d)=>{
+    const ents=(d.entries||[]).filter(e=>e.date===dateStr);
+    return a+ents.reduce((b,e)=>b+e.amount,0);
+  },0);
+
+  const label=new Date(dateStr+'T12:00:00').toLocaleDateString('en-NG',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('cal-detail-date').textContent=label;
+  document.getElementById('cal-detail-sub').textContent=dayTxns.length+' transaction'+(dayTxns.length!==1?'s':'');
+
+  document.getElementById('cal-detail-stats').innerHTML=
+    '<div class="stat-cell"><div class="stat-label">Revenue</div><div class="stat-value acc">'+N(cash+trans)+'</div></div>'
+    +'<div class="stat-cell"><div class="stat-label">Cash</div><div class="stat-value grn">'+N(cash)+'</div></div>'
+    +'<div class="stat-cell"><div class="stat-label">Transfer</div><div class="stat-value blu">'+N(trans)+'</div></div>'
+    +'<div class="stat-cell"><div class="stat-label">Debt That Day</div><div class="stat-value '+(debtAmt>0?'amb':'grn')+'">'+N(debtAmt)+'</div></div>';
+
+  let body='';
+
+  // Transactions table
+  if(dayTxns.length){
+    body+='<div class="cal-sect-label">Transactions</div>'
+      +'<div class="tbl-wrap"><table>'
+      +'<thead><tr><th>ID</th><th>Time</th><th>Product</th><th>Qty</th><th>Total</th><th>Pay</th><th>Customer</th><th>Debt</th></tr></thead>'
+      +'<tbody>'
+      +dayTxns.map(t=>'<tr>'
+        +'<td class="txnid">'+t.id+'</td>'
+        +'<td>'+( t.time||'—')+'</td>'
+        +'<td class="sans">'+t.prod+'</td>'
+        +'<td>'+t.qty+'</td>'
+        +'<td class="mono-green">'+N(t.total)+'</td>'
+        +'<td><span class="chip chip-'+t.pay.toLowerCase()+'">'+t.pay+'</span></td>'
+        +'<td class="sans">'+t.cust+'</td>'
+        +'<td>'+(t.isDebt==='Yes'?'<span class="chip chip-debt">Debt</span>':'—')+'</td>'
+        +'</tr>').join('')
+      +'</tbody></table></div>';
+  } else {
+    body+='<div style="color:var(--t3);font-size:.78rem;padding:8px 0">No transactions on this day.</div>';
+  }
+
+  // Product ledgers for that day
+  if(dayTxns.length){
+    body+='<div class="cal-sect-label" style="margin-top:20px">Product Breakdown</div>'
+      +S.products.map(p=>buildLedger(p.name,dayTxns)).join('');
+  }
+
+  // Debt entries for that day
+  if(dayDebts.length){
+    body+='<div class="cal-sect-label" style="margin-top:20px">Debts Opened This Day</div>'
+      +'<div class="tbl-wrap"><table>'
+      +'<thead><tr><th>Customer</th><th>Product</th><th>Amount</th><th>Balance Now</th></tr></thead>'
+      +'<tbody>'
+      +dayDebts.map(d=>{
+        const ents=(d.entries||[]).filter(e=>e.date===dateStr);
+        const dayAmt=ents.reduce((a,e)=>a+e.amount,0);
+        const bal=d.owed-d.paid;
+        return '<tr>'
+          +'<td class="sans">'+d.cust+'</td>'
+          +'<td class="sans">'+d.prod+'</td>'
+          +'<td style="color:var(--amber)">'+N(dayAmt)+'</td>'
+          +'<td style="color:'+(bal>0?'var(--red)':'var(--green)')+';font-weight:600">'+N(bal)+'</td>'
+          +'</tr>';
+      }).join('')
+      +'</tbody></table></div>';
+  }
+
+  // Stock snapshot for that day
+  const stockDate=dateStr;
+  const hasStock=S.products.some(p=>S.stock[stockDate+'::'+p.name]!=null);
+  if(hasStock){
+    body+='<div class="cal-sect-label" style="margin-top:20px">Stock Snapshot</div>'
+      +'<div class="tbl-wrap"><table>'
+      +'<thead><tr><th>Product</th><th>Opening</th><th>Sold</th><th>Remaining</th></tr></thead>'
+      +'<tbody>'
+      +S.products.map(p=>{
+        const open=getOpeningStock(p.name,stockDate);
+        const sold=soldOfOnDate(p.name,stockDate);
+        const rem=Math.max(0,open-sold);
+        return '<tr>'
+          +'<td class="sans">'+p.name+'</td>'
+          +'<td>'+open+'</td>'
+          +'<td>'+sold+'</td>'
+          +'<td style="font-weight:600;color:'+(rem<=5?'var(--red)':'var(--t1)')+'">'+rem+'</td>'
+          +'</tr>';
+      }).join('')
+      +'</tbody></table></div>';
+  }
+
+  document.getElementById('cal-detail-body').innerHTML=body;
+}
+
 </script>
 </body>
 </html>
