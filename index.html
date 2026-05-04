@@ -930,7 +930,8 @@ function checkDebtorName(){
   }
 }
 
-function addDebt(){
+function submitDebt(){
+  const editIdx=document.getElementById('d-edit-idx').value;
   const name=document.getElementById('d-name').value.trim();
   const amt=parseFloat(document.getElementById('d-amt').value);
   const date=document.getElementById('d-date').value||today();
@@ -938,16 +939,37 @@ function addDebt(){
   const prod=document.getElementById('d-prod').value;
   const price=priceOf(prod);
   const tm=nowt();
-  const id='TXN-'+uid();
-
-  // Derive qty from amount and unit price (round up, min 1)
   const qty=price>0?Math.max(1,Math.round(amt/price)):1;
-  // Use entered amount as total (may differ from qty*price if manually set)
   const total=amt;
 
+  if(editIdx!==''){
+    // EDIT MODE — editing a whole debt record
+    const di=parseInt(editIdx);
+    const d=S.debts[di];
+    if(!d){toast('Debt not found','err');return;}
+    // Find and update the first entry and its linked transaction
+    const firstEntry=d.entries&&d.entries[0];
+    if(firstEntry){
+      const diff=total-firstEntry.amount;
+      d.owed=Math.max(0,d.owed+diff);
+      firstEntry.prod=prod;
+      firstEntry.qty=qty;
+      firstEntry.amount=total;
+      // Update linked transaction
+      const txn=S.txns.find(t=>t.id===firstEntry.txnId);
+      if(txn){txn.prod=prod;txn.qty=qty;txn.price=price;txn.total=total;txn.cust=name;txn.date=date;}
+    }
+    d.cust=name; d.prod=prod; d.date=date;
+    persist(); renderAll();
+    toast('Debt updated');
+    cancelDebtEdit();
+    return;
+  }
+
+  // ADD MODE
+  const id='TXN-'+uid();
   // Create a real transaction so stock is affected
   S.txns.unshift({id,date,time:tm,prod,qty,price,total,pay:'Cash',cust:name,isDebt:'Yes',by:'Manual'});
-
   const ex=S.debts.find(d=>d.cust.toLowerCase()===name.toLowerCase()&&d.status==='pending');
   if(ex){
     ex.owed+=total;
@@ -958,10 +980,33 @@ function addDebt(){
       entries:[{txnId:id,date,time:tm,prod,qty,amount:total}],payments:[]});
   }
   persist(); renderAll();
-  toast('Debt added &mdash; '+name+' (txn created)');
+  toast('Debt added &mdash; '+name);
+  cancelDebtEdit();
+}
+
+function cancelDebtEdit(){
+  document.getElementById('d-edit-idx').value='';
   document.getElementById('d-name').value='';
   document.getElementById('d-amt').value='';
+  document.getElementById('d-date').value=today();
   document.getElementById('d-name-warn').style.display='none';
+  document.getElementById('debt-form-title').textContent='Add Manual Debt';
+  document.getElementById('debt-submit-btn').textContent='Add Debt';
+  document.getElementById('debt-form-block').style.borderColor='';
+}
+
+function editDebtRecord(i){
+  const d=S.debts[i];
+  if(!d) return;
+  document.getElementById('d-edit-idx').value=i;
+  document.getElementById('d-name').value=d.cust;
+  document.getElementById('d-prod').value=d.prod;
+  document.getElementById('d-amt').value=d.owed-d.paid;
+  document.getElementById('d-date').value=d.date;
+  document.getElementById('debt-form-title').textContent='Editing: '+d.cust;
+  document.getElementById('debt-submit-btn').textContent='Save Changes';
+  document.getElementById('debt-form-block').style.borderColor='var(--blue)';
+  document.getElementById('debt-form-block').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 // Payment modal
@@ -1477,6 +1522,7 @@ function renderDebts(){
       <td><span class="chip chip-pending">Pending</span></td>
       <td style="white-space:nowrap">
         <button class="btn btn-grn" onclick="markPaid(${realIdx})">Pay</button>
+        <button class="btn btn-blue" onclick="editDebtRecord(${realIdx})" style="margin-left:4px">Edit</button>
         <button class="btn btn-red" onclick="delDebt(${realIdx})" style="margin-left:4px">&#x2715;</button>
       </td>
     </tr>`;
