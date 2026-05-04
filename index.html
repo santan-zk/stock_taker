@@ -395,8 +395,9 @@ tbody tr:hover{background:rgba(255,255,255,.02);}
         <div class="header-actions"><button class="btn btn-pdf" onclick="exportPDF('debts')">&#x2B07; PDF</button></div>
       </div>
       <div class="stat-row" id="debt-stats" style="grid-template-columns:repeat(3,1fr)"></div>
-      <div class="form-block" style="margin-top:18px">
-        <div class="form-block-title">Add Manual Debt</div>
+      <div class="form-block" id="debt-form-block" style="margin-top:18px">
+        <div class="form-block-title" id="debt-form-title">Add Manual Debt</div>
+        <input type="hidden" id="d-edit-idx"/>
         <div class="fg">
           <div class="f-group">
             <label class="f-label">Customer</label>
@@ -407,7 +408,10 @@ tbody tr:hover{background:rgba(255,255,255,.02);}
           <div class="f-group"><label class="f-label">Amount (&#8358;)</label><input type="number" id="d-amt" class="f-inp" placeholder="0"/></div>
           <div class="f-group"><label class="f-label">Date</label><input type="date" id="d-date" class="f-inp"/></div>
         </div>
-        <div class="f-actions"><button class="btn btn-acc" onclick="addDebt()">Add Debt</button></div>
+        <div class="f-actions">
+          <button class="btn btn-acc" id="debt-submit-btn" onclick="submitDebt()">Add Debt</button>
+          <button class="btn btn-ghost" onclick="cancelDebtEdit()">Clear</button>
+        </div>
       </div>
       <div class="tbl-wrap"><table>
         <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Customer</th><th>Product</th><th>Owed</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr></thead>
@@ -932,19 +936,29 @@ function addDebt(){
   const date=document.getElementById('d-date').value||today();
   if(!name||!amt){toast('Fill name and amount','err');return;}
   const prod=document.getElementById('d-prod').value;
+  const price=priceOf(prod);
   const tm=nowt();
   const id='TXN-'+uid();
+
+  // Derive qty from amount and unit price (round up, min 1)
+  const qty=price>0?Math.max(1,Math.round(amt/price)):1;
+  // Use entered amount as total (may differ from qty*price if manually set)
+  const total=amt;
+
+  // Create a real transaction so stock is affected
+  S.txns.unshift({id,date,time:tm,prod,qty,price,total,pay:'Cash',cust:name,isDebt:'Yes',by:'Manual'});
+
   const ex=S.debts.find(d=>d.cust.toLowerCase()===name.toLowerCase()&&d.status==='pending');
   if(ex){
-    ex.owed+=amt;
+    ex.owed+=total;
     ex.entries=ex.entries||[];
-    ex.entries.push({txnId:id,date,time:tm,prod,qty:1,amount:amt});
+    ex.entries.push({txnId:id,date,time:tm,prod,qty,amount:total});
   } else {
-    S.debts.unshift({id,date,time:tm,cust:name,prod,owed:amt,paid:0,status:'pending',
-      entries:[{txnId:id,date,time:tm,prod,qty:1,amount:amt}],payments:[]});
+    S.debts.unshift({id,date,time:tm,cust:name,prod,owed:total,paid:0,status:'pending',
+      entries:[{txnId:id,date,time:tm,prod,qty,amount:total}],payments:[]});
   }
   persist(); renderAll();
-  toast('Debt added &mdash; '+name);
+  toast('Debt added &mdash; '+name+' (txn created)');
   document.getElementById('d-name').value='';
   document.getElementById('d-amt').value='';
   document.getElementById('d-name-warn').style.display='none';
@@ -997,20 +1011,27 @@ function submitPayment(){
 
 function delDebt(i){
   const d=S.debts[i];
+  const txnIds=(d.entries||[]).map(e=>e.txnId);
+  const linkedCount=txnIds.filter(id=>S.txns.find(t=>t.id===id)).length;
   showModal(
     'Delete Debt Record',
     `<div class="modal-danger">Delete debt for <strong>${d.cust}</strong>?<br/>
     Owed: ${Nraw(d.owed)} &mdash; Paid: ${Nraw(d.paid)}<br/>Balance: ${Nraw(d.owed-d.paid)}<br/><br/>
-    This will NOT delete the original transactions.</div>`,
+    ${linkedCount>0?`&#x26A0; <strong>${linkedCount} linked transaction(s) will also be deleted</strong> so stock stays accurate.`:'No linked transactions found.'}</div>`,
     `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
      <button class="btn" style="background:var(--red);color:#fff" onclick="confirmDelDebt(${i})">Delete</button>`
   );
 }
 
 function confirmDelDebt(i){
+  const d=S.debts[i];
+  // Remove linked transactions so stock stays accurate
+  const txnIds=new Set((d.entries||[]).map(e=>e.txnId));
+  txnIds.add(d.id);
+  S.txns=S.txns.filter(t=>!txnIds.has(t.id));
   S.debts.splice(i,1);
   persist(); renderAll(); closeModal();
-  toast('Debt record deleted','err');
+  toast('Debt and linked transactions deleted','err');
 }
 
 // ── PRODUCTS ───────────────────────────────────────────────────────────
