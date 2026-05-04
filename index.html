@@ -1314,7 +1314,7 @@ function buildPDFBody(pageId){
         const dayTotal=ents.reduce((a,e)=>a+e.amount,0);
         return `<div class="debtor-day-head">${date} <span>₦${Math.round(dayTotal).toLocaleString()}</span></div>
         <table style="margin-bottom:0">
-          <thead><tr><th>Txn ID</th><th>Time</th><th>Product</th><th>Qty</th><th>Amount</th></tr></thead>
+          <thead><tr><th>Txn ID</th><th>Time</th><th>Product</th><th>Qty</th><th>Amount</th><th></th></tr></thead>
           <tbody>${ents.map(e=>`<tr>
             <td>${e.txnId}</td><td>${e.time||'—'}</td>
             <td class="sans">${e.prod}</td><td>${e.qty}</td>
@@ -1515,6 +1515,7 @@ function renderDebtors(){
             <td class="txnid">${e.txnId}</td><td>${e.time||'—'}</td>
             <td class="sans">${e.prod}</td><td>${e.qty}</td>
             <td style="color:var(--amber)">${N(e.amount)}</td>
+            <td><button class="btn btn-red" onclick="delDebtEntry(${i},'${e.txnId}')" title="Delete this entry">&#x2715;</button></td>
           </tr>`).join('')}</tbody>
         </table></div>
       </div>`;
@@ -1541,6 +1542,55 @@ function renderDebtors(){
       </div>
     </div>`;
   }).join('');
+}
+
+
+function delDebtEntry(debtIdx, txnId){
+  const d = S.debts[debtIdx];
+  if(!d) return;
+  const ei = (d.entries||[]).findIndex(e=>e.txnId===txnId);
+  if(ei===-1) return;
+  const entry = d.entries[ei];
+
+  showModal(
+    'Delete Entry — '+d.cust,
+    `<div class="modal-danger">
+      Remove <strong>${entry.prod}</strong> (${entry.qty} unit${entry.qty!==1?'s':''}) — ${Nraw(entry.amount)} from ${d.cust}'s debt?<br/><br/>
+      &#x26A0; The linked transaction will also be deleted so stock stays accurate.<br/><br/>
+      ${d.entries.length===1?'<strong>This is the only entry — the entire debt record will be removed.</strong>':'Remaining debt will adjust automatically.'}
+    </div>`,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+     <button class="btn" style="background:var(--red);color:#fff" onclick="confirmDelDebtEntry(${debtIdx},'${txnId}')">Delete Entry</button>`
+  );
+}
+
+function confirmDelDebtEntry(debtIdx, txnId){
+  const d = S.debts[debtIdx];
+  if(!d) { closeModal(); return; }
+  const ei = (d.entries||[]).findIndex(e=>e.txnId===txnId);
+  if(ei===-1) { closeModal(); return; }
+  const entry = d.entries[ei];
+
+  // Remove linked transaction (affects stock)
+  S.txns = S.txns.filter(t=>t.id!==txnId);
+
+  // Adjust debt owed
+  d.owed = Math.max(0, d.owed - entry.amount);
+  d.entries.splice(ei, 1);
+
+  // If no entries left or owed is 0, remove the whole debt
+  if(!d.entries.length || d.owed <= 0){
+    S.debts.splice(debtIdx, 1);
+    persist(); renderAll(); closeModal();
+    toast('Entry deleted — debt record removed','err');
+    return;
+  }
+
+  // Re-check status
+  if(d.paid >= d.owed) d.status = 'cleared';
+
+  persist(); renderAll(); closeModal();
+  toast('Entry deleted — debt adjusted to '+Nraw(d.owed));
 }
 
 function toggleDebtor(i){
