@@ -2,548 +2,720 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>Club Tracker</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{
   --bg:#080808;--s1:#0f0f0f;--s2:#161616;--s3:#1e1e1e;
-  --line:#2a2a2a;--line2:#333;--t1:#f0f0f0;--t2:#888;--t3:#444;
-  --acc:#e8ff47;--acc-dim:rgba(232,255,71,.08);
-  --red:#ff4545;--green:#2dce89;--blue:#4a9eff;--amber:#ffaa00;--purple:#b47fff;
+  --line:#2a2a2a;--line2:#333;
+  --t1:#f0f0f0;--t2:#888;--t3:#444;
+  --acc:#e8ff47;--acc-dim:rgba(232,255,71,.1);
+  --red:#ff4545;--green:#2dce89;--blue:#4a9eff;--amber:#ffaa00;
   --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  --tab-h:60px;--top-h:52px;
 }
-html{font-size:14px;}
-body{background:var(--bg);color:var(--t1);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
-.shell{display:grid;grid-template-columns:224px 1fr;min-height:100vh;}
-.sidebar{background:var(--s1);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
-.main{overflow:hidden;}
-.sb-brand{padding:22px 20px 18px;border-bottom:1px solid var(--line);}
-.sb-brand-name{font-family:var(--mono);font-size:.92rem;font-weight:600;letter-spacing:-.02em;}
-.sb-brand-sub{font-size:.65rem;color:var(--t3);margin-top:3px;font-family:var(--mono);}
-.sb-kpi{padding:14px 20px;border-bottom:1px solid var(--line);}
-.kpi-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;}
-.kpi-row:not(:last-child){border-bottom:1px solid var(--line);}
-.kpi-lbl{font-size:.62rem;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;}
-.kpi-val{font-family:var(--mono);font-size:.8rem;font-weight:600;color:var(--acc);}
-.kpi-val.red{color:var(--red);}
-.kpi-val.green{color:var(--green);}
-.sb-nav{flex:1;padding:10px 0;}
-.nav-section{padding:8px 20px 4px;font-size:.58rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;transition:all .15s;border-left:2px solid transparent;font-size:.8rem;color:var(--t2);}
-.nav-item:hover{color:var(--t1);background:var(--s2);}
-.nav-item.active{color:var(--t1);border-left-color:var(--acc);background:var(--acc-dim);}
-.nav-item .ni-dot{width:6px;height:6px;border-radius:50%;background:var(--t3);flex-shrink:0;transition:background .15s;}
-.nav-item.active .ni-dot{background:var(--acc);}
-.nav-item span{font-size:.75rem;}
-.topbar{display:none;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--s1);position:sticky;top:0;z-index:100;}
-.topbar-brand{font-family:var(--mono);font-size:.85rem;font-weight:600;}
-.menu-btn{background:none;border:1px solid var(--line2);color:var(--t1);padding:6px 10px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:.7rem;}
-.drawer{position:fixed;inset:0;z-index:200;display:none;}
-.drawer.open{display:block;}
-.drawer-overlay{position:absolute;inset:0;background:rgba(0,0,0,.7);}
-.drawer-panel{position:absolute;left:0;top:0;bottom:0;width:260px;background:var(--s1);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow-y:auto;}
-.content{padding:26px 28px;max-width:980px;}
-.page{display:none;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--t1);font-family:var(--sans);display:flex;flex-direction:column;}
+
+/* ── TOP BAR ── */
+.topbar{height:var(--top-h);display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:var(--s1);border-bottom:1px solid var(--line);flex-shrink:0;position:relative;z-index:10;}
+.topbar-title{font-family:var(--mono);font-size:.82rem;font-weight:600;letter-spacing:-.01em;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.topbar-date{font-size:.65rem;color:var(--t2);font-family:var(--mono);}
+.kpi-strip{display:flex;gap:0;background:var(--s2);border-bottom:1px solid var(--line);flex-shrink:0;overflow-x:auto;scrollbar-width:none;}
+.kpi-strip::-webkit-scrollbar{display:none;}
+.kpi-item{flex:1;min-width:80px;padding:8px 12px;border-right:1px solid var(--line);white-space:nowrap;}
+.kpi-item:last-child{border-right:none;}
+.kpi-lbl{font-size:.55rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;}
+.kpi-val{font-family:var(--mono);font-size:.78rem;font-weight:600;margin-top:2px;}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+.page{display:none;min-height:100%;}
 .page.active{display:block;}
-.page-header{margin-bottom:22px;padding-bottom:14px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
-.page-title{font-family:var(--mono);font-size:1.05rem;font-weight:600;letter-spacing:-.02em;}
-.page-sub{font-size:.7rem;color:var(--t2);margin-top:4px;}
-.header-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:22px;}
-.stat-cell{background:var(--s1);padding:15px 14px;}
-.stat-label{font-size:.6rem;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
-.stat-value{font-family:var(--mono);font-size:1rem;font-weight:600;}
-.stat-value.acc{color:var(--acc);}
-.stat-value.grn{color:var(--green);}
-.stat-value.blu{color:var(--blue);}
-.stat-value.amb{color:var(--amber);}
-.stat-value.red{color:var(--red);}
-.stat-value.pur{color:var(--purple);}
-.form-block{background:var(--s1);border:1px solid var(--line);border-radius:6px;padding:18px 20px;margin-bottom:18px;}
-.form-block-title{font-family:var(--mono);font-size:.68rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;}
-.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px;}
-.f-group{display:flex;flex-direction:column;gap:5px;}
-.f-label{font-size:.6rem;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;}
-.f-inp{background:var(--s2);border:1px solid var(--line2);border-radius:4px;padding:8px 10px;color:var(--t1);font-family:var(--mono);font-size:.8rem;outline:none;width:100%;transition:border-color .15s;}
+
+/* ── BOTTOM TAB BAR ── */
+.tabbar{height:var(--tab-h);display:flex;background:var(--s1);border-top:1px solid var(--line);flex-shrink:0;}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;transition:all .15s;border:none;background:none;color:var(--t3);padding:0;}
+.tab.active{color:var(--acc);}
+.tab-icon{font-size:1.1rem;line-height:1;}
+.tab-label{font-size:.52rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;}
+
+/* ── SECTION HEADERS ── */
+.pg-head{padding:16px 16px 10px;display:flex;align-items:center;justify-content:space-between;}
+.pg-title{font-family:var(--mono);font-size:.88rem;font-weight:600;}
+.pg-sub{font-size:.65rem;color:var(--t2);margin-top:2px;}
+.sec-label{font-family:var(--mono);font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);padding:12px 16px 6px;}
+
+/* ── CARDS ── */
+.card{background:var(--s1);border:1px solid var(--line);border-radius:8px;margin:0 12px 10px;}
+.card-head{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-family:var(--mono);font-size:.78rem;font-weight:600;}
+.card-body{padding:12px 14px;}
+
+/* ── STAT GRID ── */
+.stat-grid{display:grid;gap:1px;background:var(--line);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+.stat-grid.cols2{grid-template-columns:1fr 1fr;}
+.stat-grid.cols3{grid-template-columns:1fr 1fr 1fr;}
+.stat-grid.cols4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.stat-cell{background:var(--s1);padding:12px 14px;}
+.stat-lbl{font-size:.58rem;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;}
+.stat-val{font-family:var(--mono);font-size:.9rem;font-weight:600;}
+.stat-val.acc{color:var(--acc);}
+.stat-val.grn{color:var(--green);}
+.stat-val.blu{color:var(--blue);}
+.stat-val.amb{color:var(--amber);}
+.stat-val.red{color:var(--red);}
+
+/* ── PRODUCT TAP GRID ── */
+.prod-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;}
+.prod-tile{background:var(--s2);border:2px solid var(--line2);border-radius:10px;padding:14px 12px;cursor:pointer;transition:all .15s;user-select:none;position:relative;text-align:center;}
+.prod-tile:active{transform:scale(.96);}
+.prod-tile.in-cart{border-color:var(--acc);background:var(--acc-dim);}
+.prod-tile-name{font-size:.78rem;font-weight:600;margin-bottom:4px;}
+.prod-tile-price{font-family:var(--mono);font-size:.68rem;color:var(--green);}
+.prod-tile-qty{position:absolute;top:8px;right:8px;background:var(--acc);color:#080808;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.7rem;font-weight:600;}
+
+/* ── CART ── */
+.cart{background:var(--s1);border-top:2px solid var(--line2);padding:12px;}
+.cart-empty{text-align:center;color:var(--t3);font-size:.75rem;padding:16px;font-family:var(--mono);}
+.cart-items{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+.cart-item{display:flex;align-items:center;justify-content:space-between;background:var(--s2);border-radius:6px;padding:8px 10px;}
+.cart-item-name{font-size:.75rem;font-weight:600;flex:1;}
+.cart-item-controls{display:flex;align-items:center;gap:6px;}
+.qty-btn{width:26px;height:26px;border-radius:5px;border:1px solid var(--line2);background:var(--s3);color:var(--t1);font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--mono);}
+.qty-btn:active{background:var(--line2);}
+.cart-item-qty{font-family:var(--mono);font-size:.78rem;font-weight:600;min-width:20px;text-align:center;}
+.cart-item-total{font-family:var(--mono);font-size:.75rem;color:var(--green);min-width:60px;text-align:right;}
+.cart-total-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--line);margin-bottom:10px;}
+.cart-total-lbl{font-size:.72rem;color:var(--t2);}
+.cart-total-val{font-family:var(--mono);font-size:1rem;font-weight:600;color:var(--acc);}
+
+/* ── FORM FIELDS ── */
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.field-row.full{grid-template-columns:1fr;}
+.f-group{display:flex;flex-direction:column;gap:4px;}
+.f-lbl{font-size:.6rem;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;}
+.f-inp{background:var(--s2);border:1px solid var(--line2);border-radius:6px;padding:9px 11px;color:var(--t1);font-family:var(--mono);font-size:.82rem;outline:none;width:100%;transition:border-color .15s;}
 .f-inp:focus{border-color:var(--acc);}
 .f-inp option{background:var(--s2);}
-.f-warn{font-size:.62rem;color:var(--amber);margin-top:3px;display:none;}
-.f-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
-.btn{padding:8px 16px;border:none;border-radius:4px;font-family:var(--mono);font-size:.73rem;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.02em;white-space:nowrap;}
-.btn-acc{background:var(--acc);color:#080808;}
-.btn-acc:hover{background:#d4eb3e;}
+.f-warn{font-size:.6rem;color:var(--amber);margin-top:2px;display:none;}
+.toggle-row{display:flex;gap:6px;flex-wrap:wrap;}
+.toggle-btn{padding:7px 14px;border-radius:20px;border:1px solid var(--line2);background:none;color:var(--t2);font-family:var(--mono);font-size:.7rem;cursor:pointer;transition:all .15s;}
+.toggle-btn.active{background:var(--acc);color:#080808;border-color:var(--acc);font-weight:600;}
+
+/* ── BUTTONS ── */
+.btn{padding:10px 18px;border:none;border-radius:6px;font-family:var(--mono);font-size:.75rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-acc{background:var(--acc);color:#080808;width:100%;padding:13px;}
+.btn-acc:active{background:#d4eb3e;}
 .btn-ghost{background:none;border:1px solid var(--line2);color:var(--t2);}
-.btn-ghost:hover{color:var(--t1);border-color:var(--t2);}
+.btn-ghost:active{background:var(--s2);}
 .btn-red{background:none;border:1px solid rgba(255,69,69,.3);color:var(--red);font-size:.68rem;padding:5px 9px;}
-.btn-red:hover{background:rgba(255,69,69,.1);}
-.btn-blue{background:none;border:1px solid rgba(74,158,255,.3);color:var(--blue);font-size:.68rem;padding:5px 9px;}
-.btn-blue:hover{background:rgba(74,158,255,.1);}
+.btn-red:active{background:rgba(255,69,69,.1);}
 .btn-grn{background:none;border:1px solid rgba(45,206,137,.3);color:var(--green);font-size:.68rem;padding:5px 9px;}
-.btn-grn:hover{background:rgba(45,206,137,.1);}
-.btn-pdf{background:none;border:1px solid rgba(232,255,71,.25);color:var(--acc);font-size:.7rem;padding:7px 13px;}
-.btn-pdf:hover{background:var(--acc-dim);}
-.btn-sm{padding:5px 10px;font-size:.68rem;}
-.tbl-wrap{background:var(--s1);border:1px solid var(--line);border-radius:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-table{width:100%;border-collapse:collapse;min-width:480px;}
-thead th{padding:9px 11px;text-align:left;font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t2);background:var(--s2);border-bottom:1px solid var(--line);white-space:nowrap;}
-tbody td{padding:9px 11px;font-size:.76rem;border-bottom:1px solid var(--line);font-family:var(--mono);vertical-align:middle;}
+.btn-grn:active{background:rgba(45,206,137,.1);}
+.btn-blue{background:none;border:1px solid rgba(74,158,255,.3);color:var(--blue);font-size:.68rem;padding:5px 9px;}
+.btn-blue:active{background:rgba(74,158,255,.1);}
+.btn-pdf{background:none;border:1px solid rgba(232,255,71,.25);color:var(--acc);font-size:.7rem;padding:7px 13px;border-radius:6px;}
+.btn-sm{padding:6px 12px;font-size:.7rem;}
+.btn-row{display:flex;gap:8px;padding:12px;}
+.btn-row .btn{flex:1;}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 12px 10px;border:1px solid var(--line);border-radius:8px;background:var(--s1);}
+table{width:100%;border-collapse:collapse;min-width:380px;}
+thead th{padding:8px 10px;text-align:left;font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t2);background:var(--s2);border-bottom:1px solid var(--line);white-space:nowrap;}
+tbody td{padding:8px 10px;font-size:.74rem;border-bottom:1px solid var(--line);font-family:var(--mono);vertical-align:middle;}
 tbody td.sans{font-family:var(--sans);}
 tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover{background:rgba(255,255,255,.02);}
-.empty-state{text-align:center;padding:36px 20px;color:var(--t3);font-size:.78rem;}
-.chip{display:inline-block;padding:2px 7px;border-radius:2px;font-size:.63rem;font-weight:600;font-family:var(--mono);letter-spacing:.04em;}
+.empty{text-align:center;padding:28px;color:var(--t3);font-size:.75rem;}
+
+/* ── CHIPS ── */
+.chip{display:inline-block;padding:2px 7px;border-radius:3px;font-size:.62rem;font-weight:600;font-family:var(--mono);}
 .chip-cash{background:rgba(45,206,137,.12);color:var(--green);}
 .chip-transfer{background:rgba(74,158,255,.12);color:var(--blue);}
 .chip-debt{background:rgba(255,170,0,.12);color:var(--amber);}
 .chip-pending{background:rgba(255,170,0,.1);color:var(--amber);}
-.chip-cleared{background:rgba(45,206,137,.1);color:var(--green);}
 .chip-low{background:rgba(255,69,69,.1);color:var(--red);}
 .chip-ok{background:rgba(45,206,137,.1);color:var(--green);}
-.sbar{height:3px;background:var(--s3);border-radius:2px;margin-top:5px;width:72px;}
-.sbar-fill{height:100%;border-radius:2px;}
-.period-row{display:flex;gap:0;border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-bottom:18px;width:fit-content;}
-.period-btn{padding:7px 15px;background:none;border:none;color:var(--t2);font-family:var(--mono);font-size:.7rem;cursor:pointer;border-right:1px solid var(--line);transition:all .15s;}
-.period-btn:last-child{border-right:none;}
-.period-btn.active{background:var(--acc);color:#080808;font-weight:600;}
-.period-btn:hover:not(.active){background:var(--s2);color:var(--t1);}
-.prod-ledger{background:var(--s1);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:10px;}
-.pl-head{display:grid;grid-template-columns:1fr auto;align-items:center;padding:11px 15px;border-bottom:1px solid var(--line);background:var(--s2);}
-.pl-name{font-family:var(--mono);font-size:.8rem;font-weight:600;}
-.pl-total{font-family:var(--mono);font-size:.8rem;color:var(--acc);}
-.pl-body{display:grid;grid-template-columns:repeat(4,1fr);gap:0;}
-.pl-cell{padding:11px 15px;border-right:1px solid var(--line);}
-.pl-cell:last-child{border-right:none;}
-.pl-cell-lbl{font-size:.58rem;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
-.pl-cell-val{font-family:var(--mono);font-size:.82rem;font-weight:600;}
-.filter-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;}
-.filter-row .f-inp{flex:1;min-width:120px;}
-.txnid{color:var(--acc);font-size:.7rem;}
-.mono-green{color:var(--green);}
-.mono-red{color:var(--red);}
-.section-label{font-family:var(--mono);font-size:.62rem;color:var(--t2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;margin-top:20px;}
 
-/* DEBTOR BREAKDOWN */
-.debt-grand{background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:14px 18px;margin-bottom:18px;display:flex;gap:28px;flex-wrap:wrap;}
-.dg-item{display:flex;flex-direction:column;gap:3px;}
-.dg-lbl{font-size:.58rem;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;}
-.dg-val{font-family:var(--mono);font-size:.95rem;font-weight:600;}
-.debtor-card{background:var(--s1);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:12px;}
-.debtor-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:var(--s2);border-bottom:1px solid var(--line);cursor:pointer;user-select:none;}
-.debtor-head:hover{background:var(--s3);}
-.debtor-name{font-family:var(--mono);font-size:.85rem;font-weight:600;}
-.debtor-meta{display:flex;gap:14px;align-items:center;}
-.debtor-owed{font-family:var(--mono);font-size:.8rem;color:var(--red);}
-.debtor-owed.cleared{color:var(--green);}
-.debtor-toggle{font-family:var(--mono);font-size:.62rem;color:var(--t3);}
+/* ── LEDGER CARDS ── */
+.ledger{background:var(--s1);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:0 12px 8px;}
+.ledger-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--s2);border-bottom:1px solid var(--line);}
+.ledger-name{font-family:var(--mono);font-size:.78rem;font-weight:600;}
+.ledger-total{font-family:var(--mono);font-size:.78rem;color:var(--acc);}
+.ledger-body{display:grid;grid-template-columns:repeat(4,1fr);}
+.ledger-cell{padding:10px 12px;border-right:1px solid var(--line);}
+.ledger-cell:last-child{border-right:none;}
+.ledger-cell-lbl{font-size:.56rem;color:var(--t2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;}
+.ledger-cell-val{font-family:var(--mono);font-size:.78rem;font-weight:600;}
+
+/* ── STOCK BAR ── */
+.sbar{height:3px;background:var(--s3);border-radius:2px;margin-top:4px;width:60px;}
+.sbar-fill{height:100%;border-radius:2px;}
+
+/* ── DATE RANGE ── */
+.daterange-wrap{padding:10px 12px;background:var(--s2);border-bottom:1px solid var(--line);display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.dr-presets{display:flex;gap:4px;flex-wrap:wrap;}
+.dr-btn{padding:5px 11px;border-radius:16px;border:1px solid var(--line2);background:none;color:var(--t2);font-family:var(--mono);font-size:.65rem;cursor:pointer;transition:all .15s;}
+.dr-btn.active{background:var(--acc);color:#080808;border-color:var(--acc);font-weight:600;}
+.dr-custom{display:flex;gap:6px;align-items:center;margin-top:4px;width:100%;}
+.dr-custom .f-inp{flex:1;font-size:.72rem;padding:6px 8px;}
+.dr-custom-lbl{font-size:.62rem;color:var(--t3);font-family:var(--mono);}
+
+/* ── SUPPLIER GROUP ── */
+.sup-group{margin:0 12px 14px;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+.sup-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--s2);border-bottom:1px solid var(--line);}
+.sup-name{font-family:var(--mono);font-size:.82rem;font-weight:600;}
+.sup-total{font-family:var(--mono);font-size:.82rem;color:var(--acc);}
+.sup-totals{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border-bottom:1px solid var(--line);}
+.sup-totals .stat-cell{background:var(--s2);}
+.sup-body{padding:10px 0 0;}
+
+/* ── DEBTOR CARDS ── */
+.debtor-card{background:var(--s1);border:1px solid var(--line);border-radius:8px;margin:0 12px 10px;overflow:hidden;}
+.debtor-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--s2);cursor:pointer;user-select:none;}
+.debtor-name{font-family:var(--mono);font-size:.82rem;font-weight:600;}
+.debtor-meta{display:flex;align-items:center;gap:10px;}
+.debtor-bal{font-family:var(--mono);font-size:.75rem;color:var(--red);font-weight:600;}
+.debtor-toggle{font-size:.6rem;color:var(--t3);font-family:var(--mono);}
 .debtor-body{display:none;}
 .debtor-body.open{display:block;}
-.debtor-day{border-bottom:1px solid var(--line);}
-.debtor-day:last-child{border-bottom:none;}
-.debtor-day-head{display:flex;justify-content:space-between;align-items:center;padding:8px 16px;background:rgba(255,255,255,.015);}
-.debtor-day-date{font-size:.68rem;color:var(--t2);font-family:var(--mono);}
-.debtor-day-total{font-size:.7rem;font-family:var(--mono);color:var(--amber);}
-.debtor-entries table{min-width:0;width:100%;}
-.debtor-entries thead th{font-size:.56rem;padding:6px 12px;}
-.debtor-entries tbody td{font-size:.7rem;padding:6px 12px;}
-.pay-log{padding:10px 16px 12px;border-top:1px solid var(--line);background:rgba(45,206,137,.03);}
-.pay-log-title{font-size:.58rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;font-family:var(--mono);}
-.pay-entry{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--line);}
+.debtor-day-head{display:flex;justify-content:space-between;padding:7px 14px;background:rgba(255,255,255,.015);border-top:1px solid var(--line);font-size:.65rem;font-family:var(--mono);color:var(--t2);}
+.debtor-day-amt{color:var(--amber);}
+.pay-log{padding:8px 14px 10px;border-top:1px solid var(--line);background:rgba(45,206,137,.03);}
+.pay-log-lbl{font-size:.56rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;font-family:var(--mono);}
+.pay-entry{display:flex;justify-content:space-between;font-size:.67rem;padding:3px 0;border-bottom:1px solid var(--line);}
 .pay-entry:last-child{border-bottom:none;}
-.pay-entry-meta{font-size:.68rem;color:var(--t2);font-family:var(--mono);}
-.pay-entry-amt{font-size:.7rem;color:var(--green);font-family:var(--mono);font-weight:600;}
-.debtor-actions{padding:11px 16px;border-top:1px solid var(--line);display:flex;gap:8px;}
+.pay-entry-meta{color:var(--t2);font-family:var(--mono);}
+.pay-entry-amt{color:var(--green);font-family:var(--mono);font-weight:600;}
+.debtor-actions{padding:10px 14px;border-top:1px solid var(--line);display:flex;gap:8px;}
 
-/* PRODUCTS PAGE */
-.prod-list{display:flex;flex-direction:column;gap:10px;margin-bottom:18px;}
-.prod-row{background:var(--s1);border:1px solid var(--line);border-radius:5px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;gap:12px;}
-.prod-row-info{display:flex;flex-direction:column;gap:3px;}
-.prod-row-name{font-family:var(--mono);font-size:.82rem;font-weight:600;}
-.prod-row-price{font-size:.7rem;color:var(--green);font-family:var(--mono);}
-.prod-row-actions{display:flex;gap:6px;}
+/* ── CALENDAR ── */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--s2);border-bottom:1px solid var(--line);}
+.cal-month{font-family:var(--mono);font-size:.82rem;font-weight:600;}
+.cal-nav-btns{display:flex;gap:6px;}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);background:var(--s2);border-bottom:1px solid var(--line);}
+.cal-dow span{text-align:center;padding:6px 2px;font-size:.55rem;font-weight:600;text-transform:uppercase;color:var(--t3);font-family:var(--mono);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--line);}
+.cal-cell{background:var(--s1);min-height:56px;padding:5px;cursor:pointer;position:relative;display:flex;flex-direction:column;gap:2px;transition:background .1s;}
+.cal-cell:active{background:var(--s2);}
+.cal-cell.empty{background:var(--bg);cursor:default;}
+.cal-cell.today{outline:2px solid var(--acc);outline-offset:-2px;}
+.cal-cell.selected{background:var(--acc-dim);}
+.cal-cell.has-debt::after{content:'';position:absolute;top:4px;right:4px;width:5px;height:5px;border-radius:50%;background:var(--amber);}
+.cal-day-num{font-family:var(--mono);font-size:.65rem;font-weight:600;color:var(--t2);}
+.cal-cell.today .cal-day-num{color:var(--acc);}
+.cal-day-rev{font-family:var(--mono);font-size:.6rem;color:var(--green);font-weight:600;}
+.cal-day-bar{height:2px;border-radius:2px;margin-top:auto;width:100%;background:var(--green);opacity:.4;}
+.cal-detail{margin:10px 12px;background:var(--s1);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:none;}
+.cal-detail.open{display:block;}
+.cal-detail-head{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:var(--s2);border-bottom:1px solid var(--line);}
+.cal-detail-date{font-family:var(--mono);font-size:.78rem;font-weight:600;}
 
-/* DATA PAGE */
-.data-section{background:var(--s1);border:1px solid var(--line);border-radius:6px;padding:18px 20px;margin-bottom:16px;}
-.data-section-title{font-family:var(--mono);font-size:.68rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;}
-.data-info{font-size:.75rem;color:var(--t2);margin-bottom:14px;line-height:1.6;}
-
-/* MODAL */
-.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:300;display:none;align-items:center;justify-content:center;padding:16px;}
+/* ── MODAL ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;display:none;align-items:flex-end;justify-content:center;padding:0;}
 .modal-backdrop.open{display:flex;}
-.modal{background:var(--s1);border:1px solid var(--line2);border-radius:8px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;}
-.modal-head{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid var(--line);background:var(--s2);position:sticky;top:0;}
-.modal-title{font-family:var(--mono);font-size:.83rem;font-weight:600;}
-.modal-close{background:none;border:none;color:var(--t2);cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;}
-.modal-close:hover{color:var(--t1);}
-.modal-body{padding:18px 20px;display:flex;flex-direction:column;gap:13px;}
-.modal-footer{padding:12px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;background:var(--s2);}
-.modal-info{font-size:.73rem;color:var(--t2);font-family:var(--mono);background:var(--s2);padding:8px 12px;border-radius:4px;}
-.modal-warn{font-size:.73rem;color:var(--amber);font-family:var(--mono);background:rgba(255,170,0,.08);border:1px solid rgba(255,170,0,.2);padding:8px 12px;border-radius:4px;}
-.modal-danger{font-size:.73rem;color:var(--red);font-family:var(--mono);background:rgba(255,69,69,.08);border:1px solid rgba(255,69,69,.2);padding:8px 12px;border-radius:4px;}
+.modal{background:var(--s1);border-top:1px solid var(--line2);border-radius:16px 16px 0 0;width:100%;max-height:90vh;overflow-y:auto;}
+.modal-handle{width:36px;height:4px;background:var(--line2);border-radius:2px;margin:10px auto 4px;}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:10px 16px 12px;}
+.modal-title{font-family:var(--mono);font-size:.82rem;font-weight:600;}
+.modal-close{background:none;border:none;color:var(--t2);cursor:pointer;font-size:1.1rem;padding:4px;}
+.modal-body{padding:0 16px 12px;display:flex;flex-direction:column;gap:10px;}
+.modal-footer{padding:12px 16px 20px;display:flex;gap:8px;}
+.modal-info{font-size:.72rem;color:var(--t2);background:var(--s2);padding:8px 12px;border-radius:6px;font-family:var(--mono);}
+.modal-danger{font-size:.72rem;color:var(--red);background:rgba(255,69,69,.07);border:1px solid rgba(255,69,69,.2);padding:8px 12px;border-radius:6px;}
+.modal-warn{font-size:.72rem;color:var(--amber);background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.2);padding:8px 12px;border-radius:6px;}
 
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--s3);border:1px solid var(--line2);border-radius:4px;padding:10px 18px;font-size:.73rem;font-family:var(--mono);z-index:999;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;}
+/* ── TOAST ── */
+.toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--s3);border:1px solid var(--line2);border-radius:6px;padding:9px 16px;font-size:.72rem;font-family:var(--mono);z-index:999;opacity:0;transition:all .22s;pointer-events:none;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast.ok{border-color:rgba(45,206,137,.4);color:var(--green);}
 .toast.err{border-color:rgba(255,69,69,.4);color:var(--red);}
 .toast.warn{border-color:rgba(255,170,0,.4);color:var(--amber);}
 
-@media(max-width:768px){
-  .shell{grid-template-columns:1fr;}
-  .sidebar{display:none;}
-  .topbar{display:flex;}
-  .content{padding:14px;}
-  .stat-row{grid-template-columns:1fr 1fr;}
-  .fg{grid-template-columns:1fr 1fr;}
-  .pl-body{grid-template-columns:1fr 1fr;}
-  .pl-cell{border-bottom:1px solid var(--line);}
-  .pl-cell:nth-child(even){border-right:none;}
-  .pl-cell:nth-last-child(-n+2){border-bottom:none;}
-  .period-row{width:100%;}
-  .period-btn{flex:1;text-align:center;}
-  table{min-width:380px;}
-  .debt-grand{gap:14px;}
-  .debtor-meta{gap:8px;}
-}
-@media(max-width:420px){
-  .stat-row{grid-template-columns:1fr 1fr;}
-  .stat-cell{padding:11px 10px;}
-  .stat-value{font-size:.9rem;}
-  .content{padding:10px;}
-}
+/* ── MISC ── */
+.divider{height:1px;background:var(--line);margin:4px 0;}
+.mono{font-family:var(--mono);}
+.green{color:var(--green);}
+.red{color:var(--red);}
+.amber{color:var(--amber);}
+.blue{color:var(--blue);}
+.acc{color:var(--acc);}
+.t2{color:var(--t2);}
+.bold{font-weight:600;}
+.pb16{padding-bottom:16px;}
+.txnid{color:var(--acc);font-size:.68rem;}
+
+/* ── DATA PAGE ── */
+.data-block{margin:0 12px 10px;background:var(--s1);border:1px solid var(--line);border-radius:8px;padding:14px;}
+.data-block-title{font-family:var(--mono);font-size:.68rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
+.data-info{font-size:.73rem;color:var(--t2);line-height:1.6;margin-bottom:10px;}
+
+
+/* LOGIN SCREEN */
+#login-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;gap:24px;}
+.login-brand{font-family:var(--mono);font-size:1.2rem;font-weight:600;letter-spacing:-.02em;}
+.login-sub{font-size:.75rem;color:var(--t2);font-family:var(--mono);}
+.login-btn{display:flex;align-items:center;gap:10px;background:#fff;color:#111;border:none;border-radius:8px;padding:12px 24px;font-family:var(--sans);font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s;}
+.login-btn:hover{background:#f0f0f0;}
+.login-btn svg{width:20px;height:20px;}
+#app-shell{display:none;flex-direction:column;height:100%;}
 
 /* PRINT */
 @media print{
-  body{background:#fff!important;color:#000!important;}
-  .sidebar,.topbar,.drawer,.toast,.modal-backdrop,.btn-pdf,.btn-red,.btn-grn,.btn-blue,.btn-acc,.btn-ghost,
-  .f-actions,.form-block,.filter-row,.period-row,.debtor-actions,.header-actions{display:none!important;}
-  .shell{display:block!important;}
-  .main,.content{display:block!important;max-width:100%!important;padding:0!important;}
+  body{background:#fff!important;color:#000!important;overflow:visible!important;height:auto!important;}
+  .topbar,.tabbar,.toast,.modal-backdrop,.kpi-strip,.daterange-wrap,button,.btn,.btn-row,.cal-nav,.cal-detail,.debtor-actions{display:none!important;}
+  .content{overflow:visible!important;height:auto!important;}
   .page{display:none!important;}
   .page.print-target{display:block!important;}
-  :root{--bg:#fff;--s1:#f7f7f7;--s2:#eee;--s3:#e4e4e4;--line:#d5d5d5;--line2:#ccc;
-    --t1:#111;--t2:#555;--t3:#999;--acc:#333;--acc-dim:rgba(0,0,0,.04);
-    --green:#1a8a55;--blue:#2255cc;--amber:#996600;--red:#cc2222;--purple:#6633aa;}
-  .stat-row{grid-template-columns:repeat(4,1fr)!important;}
-  .prod-ledger,.debtor-card{break-inside:avoid;}
+  :root{--bg:#fff;--s1:#f7f7f7;--s2:#eee;--s3:#e4e4e4;--line:#d5d5d5;--line2:#ccc;--t1:#111;--t2:#555;--t3:#999;--acc:#333;--acc-dim:rgba(0,0,0,.04);--green:#1a8a55;--blue:#2255cc;--amber:#996600;--red:#cc2222;}
+  .ledger,.debtor-card,.sup-group,.card{break-inside:avoid;}
   table{min-width:0!important;}
   .debtor-body{display:block!important;}
-  .tbl-wrap{border:1px solid #ddd!important;}
-  thead th{background:#eee!important;}
-  .page-header{border-color:#ddd!important;}
-}
-
-/* SUPPLIER GROUPS */
-.sup-group{background:var(--s1);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:24px;}
-.sup-group-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--s2);border-bottom:1px solid var(--line);flex-wrap:wrap;gap:10px;}
-.sup-group-name{font-family:var(--mono);font-size:.9rem;font-weight:600;letter-spacing:-.01em;}
-.sup-group-total{font-family:var(--mono);font-size:.9rem;color:var(--acc);font-weight:600;}
-.sup-group-body{padding:16px 18px;display:flex;flex-direction:column;gap:10px;}
-.sup-group-totals{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden;margin-top:4px;}
-.sup-group-totals .stat-cell{background:var(--s2);}
-.sup-debt-table{margin-top:4px;}
-.sup-debt-head{font-family:var(--mono);font-size:.62rem;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;margin-top:16px;}
-
-/* CALENDAR */
-.cal-nav{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
-.cal-month-label{font-family:var(--mono);font-size:.9rem;font-weight:600;flex:1;text-align:center;}
-.cal-legend{display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap;}
-.cal-legend-item{display:flex;align-items:center;gap:6px;font-size:.65rem;color:var(--t2);}
-.cal-swatch{width:12px;height:12px;border-radius:2px;display:inline-block;background:var(--s3);}
-.cal-grid-wrap{background:var(--s1);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:20px;}
-.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);background:var(--s2);border-bottom:1px solid var(--line);}
-.cal-dow-row span{text-align:center;padding:8px 4px;font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);font-family:var(--mono);}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--line);}
-.cal-cell{background:var(--s1);min-height:72px;padding:8px;cursor:pointer;transition:all .15s;position:relative;display:flex;flex-direction:column;gap:4px;}
-.cal-cell:hover{background:var(--s2);}
-.cal-cell.empty{background:var(--bg);cursor:default;}
-.cal-cell.today{outline:2px solid var(--acc);outline-offset:-2px;}
-.cal-cell.selected{background:var(--acc-dim);}
-.cal-cell.has-debt::after{content:'';position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--amber);border:1px solid rgba(255,170,0,.5);}
-.cal-day-num{font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--t2);}
-.cal-cell.today .cal-day-num{color:var(--acc);}
-.cal-day-rev{font-family:var(--mono);font-size:.68rem;color:var(--green);font-weight:600;}
-.cal-day-txns{font-size:.58rem;color:var(--t3);}
-.cal-day-bar{height:3px;border-radius:2px;margin-top:auto;width:100%;}
-
-/* Detail panel */
-.cal-detail{background:var(--s1);border:1px solid var(--line);border-radius:8px;overflow:hidden;}
-.cal-detail-head{display:flex;justify-content:space-between;align-items:flex-start;padding:16px 18px;background:var(--s2);border-bottom:1px solid var(--line);}
-.cal-detail-date{font-family:var(--mono);font-size:.95rem;font-weight:600;}
-.cal-detail-sub{font-size:.7rem;color:var(--t2);margin-top:3px;}
-.cal-detail-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border-bottom:1px solid var(--line);}
-.cal-detail-body{padding:16px 18px;}
-.cal-sect-label{font-family:var(--mono);font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--t2);margin-bottom:10px;margin-top:16px;}
-.cal-sect-label:first-child{margin-top:0;}
-
-@media(max-width:600px){
-  .cal-cell{min-height:52px;padding:5px;}
-  .cal-day-rev{font-size:.6rem;}
-  .cal-day-txns{display:none;}
-  .cal-detail-stats{grid-template-columns:repeat(2,1fr);}
 }
 </style>
+
+  <!-- Firebase -->
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, onSnapshot, getDoc }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCVsNI5hXD527JAzuWOWsD6TS5S3kJdr_Q",
+    authDomain: "club-tracker-a80f8.firebaseapp.com",
+    projectId: "club-tracker-a80f8",
+    storageBucket: "club-tracker-a80f8.firebasestorage.app",
+    messagingSenderId: "312384621083",
+    appId: "1:312384621083:web:385afcb58c3c3f91f106be"
+  };
+
+  const app    = initializeApp(firebaseConfig);
+  const auth   = getAuth(app);
+  const db     = getFirestore(app);
+
+  let unsubscribe = null;
+
+  // Expose to global scope so non-module scripts can call them
+  window._fbSignIn = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch(e) {
+      console.error(e);
+      window.toast('Sign-in failed: '+e.message, 'err');
+    }
+  };
+
+  window._fbSignOut = async () => {
+    if(unsubscribe) unsubscribe();
+    await signOut(auth);
+  };
+
+  window._fbSave = async (data) => {
+    const user = auth.currentUser;
+    if(!user) return;
+    try {
+      await setDoc(doc(db, 'trackers', user.uid), {
+        data: JSON.stringify(data),
+        updatedAt: Date.now()
+      });
+    } catch(e) {
+      console.error('Firestore save error:', e);
+      // Fallback to localStorage
+      try { localStorage.setItem('ct5', JSON.stringify(data)); } catch(_){}
+    }
+  };
+
+  onAuthStateChanged(auth, async (user) => {
+    if(user) {
+      // Show app, hide login
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app-shell').style.display    = 'flex';
+      document.getElementById('user-name').textContent      = user.displayName || user.email;
+
+      // Listen to Firestore doc in real time
+      if(unsubscribe) unsubscribe();
+      const ref = doc(db, 'trackers', user.uid);
+      unsubscribe = onSnapshot(ref, (snap) => {
+        if(snap.exists()){
+          try {
+            const parsed = JSON.parse(snap.data().data);
+            // Only update if data changed (avoid re-render loops)
+            const newHash = JSON.stringify(parsed);
+            if(newHash !== window._lastHash) {
+              window._lastHash = newHash;
+              window.S = parsed;
+              if(!window.S.products?.length) window.S.products = [...window.DEFAULT_PRODUCTS];
+              if(!window.S.txns)  window.S.txns  = [];
+              if(!window.S.debts) window.S.debts = [];
+              if(!window.S.stock) window.S.stock  = {};
+              // Also cache locally
+              try { localStorage.setItem('ct5', newHash); } catch(_){}
+              window.renderAll();
+            }
+          } catch(e){ console.error('Parse error:', e); }
+        } else {
+          // No doc yet — use localStorage data or defaults
+          window._fbSave(window.S);
+          window.renderAll();
+        }
+      }, (err) => {
+        console.error('Snapshot error:', err);
+        // Fall back to localStorage
+        window.renderAll();
+      });
+
+    } else {
+      // Signed out — show login
+      if(unsubscribe){ unsubscribe(); unsubscribe = null; }
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('app-shell').style.display    = 'none';
+    }
+  });
+  </script>
 </head>
 <body>
 
-<div class="topbar">
-  <span class="topbar-brand">CLUB / TRACKER</span>
-  <button class="menu-btn" onclick="toggleDrawer()">MENU</button>
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-brand">CLUB / TRACKER</div>
+  <div class="login-sub">Sign in to access your data</div>
+  <button class="login-btn" onclick="window._fbSignIn()">
+    <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.5 30.2 0 24 0 14.7 0 6.8 5.4 2.9 13.3l7.9 6.1C12.7 13.1 17.9 9.5 24 9.5z"/><path fill="#4285F4" d="M46.6 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.2-10.1 7.2-17z"/><path fill="#FBBC05" d="M10.8 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6l-7.9-6.1A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.5 10.8l8.3-6.2z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.1 0-11.3-3.6-13.2-8.9l-8.3 6.2C6.8 42.6 14.7 48 24 48z"/></svg>
+    Continue with Google
+  </button>
 </div>
 
-<div class="drawer" id="drawer" onclick="closeDrawerOutside(event)">
-  <div class="drawer-overlay"></div>
-  <div class="drawer-panel" id="drawer-panel">
-    <div class="sb-brand"><div class="sb-brand-name">CLUB TRACKER</div><div class="sb-brand-sub">Sales · Stock · Debts</div></div>
-    <div class="sb-kpi" id="drawer-kpi"></div>
-    <nav class="sb-nav" id="drawer-nav"></nav>
+<!-- APP SHELL -->
+<div id="app-shell">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div>
+    <div class="topbar-title">CLUB / TRACKER</div>
+  </div>
+  <div class="topbar-right" style="gap:10px">
+    <span class="topbar-date" id="top-date"></span>
+    <span id="user-name" style="font-size:.6rem;color:var(--t3);font-family:var(--mono);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    <button onclick="window._fbSignOut()" style="background:none;border:1px solid var(--line2);color:var(--t2);font-family:var(--mono);font-size:.6rem;padding:4px 8px;border-radius:4px;cursor:pointer">Out</button>
   </div>
 </div>
 
-<div class="shell">
-  <aside class="sidebar">
-    <div class="sb-brand"><div class="sb-brand-name">CLUB / TRACKER</div><div class="sb-brand-sub">Sales · Stock · Debts</div></div>
-    <div class="sb-kpi" id="sidebar-kpi"></div>
-    <nav class="sb-nav" id="sidebar-nav"></nav>
-  </aside>
+<!-- KPI STRIP -->
+<div class="kpi-strip" id="kpi-strip"></div>
 
-  <div class="main"><div class="content">
+<!-- CONTENT -->
+<div class="content" id="content">
 
-    <!-- DASHBOARD -->
-    <div class="page active" id="page-dashboard">
-      <div class="page-header">
-        <div><div class="page-title">Dashboard</div><div class="page-sub" id="dash-date"></div></div>
-      </div>
-      <div class="stat-row" id="dash-stats"></div>
-      <div class="section-label">Today's Ledger by Product</div>
-      <div id="dash-ledgers"></div>
+  <!-- ── SELL (was transactions) ── -->
+  <div class="page active" id="page-sell">
+    <div class="pg-head">
+      <div><div class="pg-title">New Sale</div><div class="pg-sub">Tap products to add</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="clearCart()">Clear</button>
     </div>
-
-    <!-- TRANSACTIONS -->
-    <div class="page" id="page-transactions">
-      <div class="page-header">
-        <div><div class="page-title">Transactions</div><div class="page-sub">Log sales — past or present</div></div>
-        <div class="header-actions"><button class="btn btn-pdf" onclick="exportPDF('transactions')">&#x2B07; PDF</button></div>
-      </div>
-      <div class="form-block" id="txn-form-block">
-        <div class="form-block-title" id="txn-form-title">New Transaction</div>
-        <input type="hidden" id="f-edit-id"/>
-        <div class="fg">
-          <div class="f-group"><label class="f-label">Date</label><input type="date" id="f-date" class="f-inp"/></div>
-          <div class="f-group"><label class="f-label">Product</label>
-            <select id="f-prod" class="f-inp"></select>
-          </div>
-          <div class="f-group"><label class="f-label">Qty</label><input type="number" id="f-qty" class="f-inp" value="1" min="1"/></div>
-          <div class="f-group"><label class="f-label">Payment</label>
-            <select id="f-pay" class="f-inp"><option value="Cash">Cash</option><option value="Transfer">Transfer</option></select>
+    <div class="prod-grid" id="prod-grid"></div>
+    <div class="sec-label">Cart</div>
+    <div class="cart" id="cart-section">
+      <div class="cart-empty" id="cart-empty">Tap products above to add them</div>
+      <div class="cart-items" id="cart-items"></div>
+      <div id="cart-footer" style="display:none">
+        <div class="cart-total-row">
+          <span class="cart-total-lbl">Total</span>
+          <span class="cart-total-val" id="cart-total">₦0</span>
+        </div>
+        <div class="field-row">
+          <div class="f-group">
+            <label class="f-lbl">Date</label>
+            <input type="date" id="s-date" class="f-inp"/>
           </div>
           <div class="f-group">
-            <label class="f-label">Customer</label>
-            <input type="text" id="f-cust" class="f-inp" placeholder="Name or walk-in"/>
+            <label class="f-lbl">Customer</label>
+            <input type="text" id="s-cust" class="f-inp" placeholder="Walk-in"/>
           </div>
-          <div class="f-group"><label class="f-label">Is Debt?</label>
-            <select id="f-debt" class="f-inp"><option value="No">No</option><option value="Yes">Yes</option></select>
+        </div>
+        <div class="field-row">
+          <div class="f-group">
+            <label class="f-lbl">Recorded By</label>
+            <input type="text" id="s-by" class="f-inp" placeholder="Name"/>
           </div>
-          <div class="f-group"><label class="f-label">Recorded By</label><input type="text" id="f-by" class="f-inp" placeholder="Name"/></div>
         </div>
-        <div class="f-actions">
-          <button class="btn btn-acc" id="txn-submit-btn" onclick="submitTxn()">Add Transaction</button>
-          <button class="btn btn-ghost" onclick="cancelTxnEdit()">Clear</button>
+        <div class="f-group" style="margin-bottom:8px">
+          <label class="f-lbl">Payment</label>
+          <div class="toggle-row" style="margin-top:4px">
+            <button class="toggle-btn active" id="pay-cash" onclick="setPay('Cash')">Cash</button>
+            <button class="toggle-btn" id="pay-transfer" onclick="setPay('Transfer')">Transfer</button>
+          </div>
         </div>
+        <div class="f-group" style="margin-bottom:12px">
+          <label class="f-lbl">Is this a debt?</label>
+          <div class="toggle-row" style="margin-top:4px">
+            <button class="toggle-btn active" id="debt-no" onclick="setDebt('No')">No</button>
+            <button class="toggle-btn" id="debt-yes" onclick="setDebt('Yes')">Yes — Debt</button>
+          </div>
+        </div>
+        <button class="btn btn-acc" onclick="submitSale()">&#x2713; Record Sale</button>
       </div>
-      <div class="filter-row">
-        <input type="date" id="fl-date" class="f-inp" onchange="renderTxnTable()"/>
-        <select id="fl-prod" class="f-inp" onchange="renderTxnTable()">
-          <option value="">All Products</option>
-        </select>
-        <select id="fl-pay" class="f-inp" onchange="renderTxnTable()">
-          <option value="">Cash + Transfer</option>
-          <option>Cash</option><option>Transfer</option>
-        </select>
-        <button class="btn btn-ghost btn-sm" onclick="clearTxnFilters()">Clear Filters</button>
-      </div>
-      <div class="tbl-wrap"><table>
-        <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Product</th><th>Qty</th><th>Unit</th><th>Total</th><th>Pay</th><th>Customer</th><th>Debt</th><th>By</th><th></th></tr></thead>
-        <tbody id="txn-body"></tbody>
-      </table></div>
     </div>
+    <div style="height:16px"></div>
+  </div>
 
-    <!-- STOCK -->
-    <div class="page" id="page-stock">
-      <div class="page-header">
-        <div><div class="page-title">Stock</div><div class="page-sub">Opening stock per date</div></div>
-        <div class="header-actions"><button class="btn btn-pdf" onclick="exportPDF('stock')">&#x2B07; PDF</button></div>
+  <!-- ── DASHBOARD ── -->
+  <div class="page" id="page-dashboard">
+    <div class="stat-grid cols2" id="dash-stats"></div>
+    <div class="sec-label" style="margin-top:8px">Today by Product</div>
+    <div id="dash-ledgers"></div>
+    <div style="height:16px"></div>
+  </div>
+
+  <!-- ── HISTORY (transactions) ── -->
+  <div class="page" id="page-history">
+    <div class="pg-head">
+      <div><div class="pg-title">History</div><div class="pg-sub">All transactions</div></div>
+      <button class="btn-pdf" onclick="exportPDF('history')">&#x2B07; PDF</button>
+    </div>
+    <div style="padding:0 12px 8px;display:flex;gap:6px;flex-wrap:wrap">
+      <input type="date" id="fl-date" class="f-inp" style="flex:1;min-width:120px" onchange="renderHistory()"/>
+      <select id="fl-prod" class="f-inp" style="flex:1;min-width:120px" onchange="renderHistory()">
+        <option value="">All Products</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="clearHistoryFilters()">Clear</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Product</th><th>Qty</th><th>Total</th><th>Pay</th><th>Customer</th><th>Debt</th><th></th></tr></thead>
+        <tbody id="history-body"></tbody>
+      </table>
+    </div>
+    <div style="height:16px"></div>
+  </div>
+
+  <!-- ── STOCK ── -->
+  <div class="page" id="page-stock">
+    <div class="pg-head">
+      <div><div class="pg-title">Stock</div><div class="pg-sub">Opening stock — carries over daily</div></div>
+      <button class="btn-pdf" onclick="exportPDF('stock')">&#x2B07; PDF</button>
+    </div>
+    <div style="padding:0 12px 8px">
+      <div class="f-group">
+        <label class="f-lbl">Date</label>
+        <input type="date" id="stock-date" class="f-inp" onchange="buildStockInputs()"/>
       </div>
-      <div class="form-block">
-        <div class="form-block-title">Set Opening Stock for Date</div>
-        <div class="fg" style="margin-bottom:12px">
-          <div class="f-group"><label class="f-label">Date</label><input type="date" id="stock-date" class="f-inp" onchange="loadStockForDate()"/></div>
-        </div>
-        <div class="fg" id="stock-inputs"></div>
-        <div class="f-actions"><button class="btn btn-acc" onclick="saveStock()">Save Stock</button></div>
-      </div>
-      <div class="tbl-wrap"><table>
-        <thead><tr><th>Product</th><th>Unit Price</th><th>Opening</th><th>Sold</th><th>Remaining</th><th>Value</th><th>Status</th></tr></thead>
+    </div>
+    <div id="stock-inputs" style="padding:0 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px"></div>
+    <div class="btn-row">
+      <button class="btn btn-acc" onclick="saveStock()">Save Stock</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Product</th><th>Price</th><th>Opening</th><th>Sold</th><th>Left</th><th>Value</th><th></th></tr></thead>
         <tbody id="stock-body"></tbody>
-      </table></div>
+      </table>
     </div>
+    <div style="height:16px"></div>
+  </div>
 
-    <!-- DEBTS -->
-    <div class="page" id="page-debts">
-      <div class="page-header">
-        <div><div class="page-title">Debts</div><div class="page-sub">Outstanding balances</div></div>
-        <div class="header-actions"><button class="btn btn-pdf" onclick="exportPDF('debts')">&#x2B07; PDF</button></div>
+  <!-- ── DEBTS ── -->
+  <div class="page" id="page-debts">
+    <div class="pg-head">
+      <div><div class="pg-title">Debts</div><div class="pg-sub">Outstanding balances</div></div>
+      <button class="btn-pdf" onclick="exportPDF('debts')">&#x2B07; PDF</button>
+    </div>
+    <div class="stat-grid cols3" id="debt-stats" style="margin-bottom:10px"></div>
+
+    <!-- Add manual debt -->
+    <div class="card" style="margin-bottom:10px" id="debt-form-card">
+      <div class="card-head">
+        <span class="card-title" id="debt-form-title">Add Manual Debt</span>
+        <button class="btn btn-ghost btn-sm" onclick="cancelDebtEdit()">Clear</button>
       </div>
-      <div class="stat-row" id="debt-stats" style="grid-template-columns:repeat(3,1fr)"></div>
-      <div class="form-block" id="debt-form-block" style="margin-top:18px">
-        <div class="form-block-title" id="debt-form-title">Add Manual Debt</div>
+      <div class="card-body">
         <input type="hidden" id="d-edit-idx"/>
-        <div class="fg">
+        <div class="field-row">
           <div class="f-group">
-            <label class="f-label">Customer</label>
+            <label class="f-lbl">Customer</label>
             <input type="text" id="d-name" class="f-inp" placeholder="Full name" oninput="checkDebtorName()"/>
             <div class="f-warn" id="d-name-warn"></div>
           </div>
-          <div class="f-group"><label class="f-label">Product</label><select id="d-prod" class="f-inp"></select></div>
-          <div class="f-group"><label class="f-label">Amount (&#8358;)</label><input type="number" id="d-amt" class="f-inp" placeholder="0"/></div>
-          <div class="f-group"><label class="f-label">Date</label><input type="date" id="d-date" class="f-inp"/></div>
+          <div class="f-group">
+            <label class="f-lbl">Product</label>
+            <select id="d-prod" class="f-inp"></select>
+          </div>
         </div>
-        <div class="f-actions">
-          <button class="btn btn-acc" id="debt-submit-btn" onclick="submitDebt()">Add Debt</button>
-          <button class="btn btn-ghost" onclick="cancelDebtEdit()">Clear</button>
+        <div class="field-row">
+          <div class="f-group">
+            <label class="f-lbl">Amount (₦)</label>
+            <input type="number" id="d-amt" class="f-inp" placeholder="0"/>
+          </div>
+          <div class="f-group">
+            <label class="f-lbl">Date</label>
+            <input type="date" id="d-date" class="f-inp"/>
+          </div>
         </div>
+        <button class="btn btn-acc" id="debt-submit-btn" onclick="submitDebt()" style="margin-top:4px">Add Debt</button>
       </div>
-      <div class="tbl-wrap"><table>
-        <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Customer</th><th>Product</th><th>Owed</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr></thead>
+    </div>
+
+    <!-- Debts table -->
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Customer</th><th>Date</th><th>Product</th><th>Owed</th><th>Paid</th><th>Balance</th><th></th></tr></thead>
         <tbody id="debt-body"></tbody>
-      </table></div>
+      </table>
     </div>
 
-    <!-- DEBTOR BREAKDOWN -->
-    <div class="page" id="page-debtors">
-      <div class="page-header">
-        <div><div class="page-title">Debtor Breakdown</div><div class="page-sub">Per-person totals · daily history · payment log</div></div>
-        <div class="header-actions"><button class="btn btn-pdf" onclick="exportPDF('debtors')">&#x2B07; PDF</button></div>
-      </div>
-      <div class="debt-grand" id="debtor-grand"></div>
-      <div id="debtor-cards"></div>
-    </div>
+    <!-- Debtor breakdown -->
+    <div class="sec-label" style="margin-top:8px">Debtor Breakdown</div>
+    <div id="debtor-cards"></div>
+    <div style="height:16px"></div>
+  </div>
 
-    <!-- SUMMARY -->
-    <div class="page" id="page-summary">
-      <div class="page-header">
-        <div><div class="page-title">Summary</div><div class="page-sub">Revenue by period and product</div></div>
-        <div class="header-actions"><button class="btn btn-pdf" onclick="exportPDF('summary')">&#x2B07; Full PDF</button></div>
-      </div>
-      <div class="period-row">
-        <button class="period-btn active" onclick="setPeriod('day',this)">Today</button>
-        <button class="period-btn" onclick="setPeriod('week',this)">This Week</button>
-        <button class="period-btn" onclick="setPeriod('month',this)">This Month</button>
-        <button class="period-btn" onclick="setPeriod('all',this)">All Time</button>
-      </div>
-      <div class="stat-row" id="sum-stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px;"></div>
-      <div id="sum-groups"></div>
+  <!-- ── SUMMARY ── -->
+  <div class="page" id="page-summary">
+    <div class="pg-head">
+      <div><div class="pg-title">Summary</div><div class="pg-sub">Revenue by period</div></div>
+      <button class="btn-pdf" onclick="exportPDF('summary')">&#x2B07; PDF</button>
     </div>
-
-    <!-- PRODUCTS -->
-    <div class="page" id="page-products">
-      <div class="page-header">
-        <div><div class="page-title">Products</div><div class="page-sub">Add, edit, or remove products and prices</div></div>
+    <div class="daterange-wrap">
+      <div class="dr-presets">
+        <button class="dr-btn active" onclick="setRange('day',this)">Today</button>
+        <button class="dr-btn" onclick="setRange('week',this)">Week</button>
+        <button class="dr-btn" onclick="setRange('month',this)">Month</button>
+        <button class="dr-btn" onclick="setRange('all',this)">All Time</button>
+        <button class="dr-btn" onclick="setRange('custom',this)">Custom</button>
       </div>
-      <div class="form-block">
-        <div class="form-block-title" id="prod-form-title">Add Product</div>
-        <input type="hidden" id="pf-edit-name"/>
-        <div class="fg">
-          <div class="f-group"><label class="f-label">Product Name</label><input type="text" id="pf-name" class="f-inp" placeholder="e.g. Malt"/></div>
-          <div class="f-group"><label class="f-label">Unit Price (&#8358;)</label><input type="number" id="pf-price" class="f-inp" placeholder="0" min="1"/></div>
-        </div>
-        <div class="f-actions">
-          <button class="btn btn-acc" onclick="submitProduct()">Save Product</button>
-          <button class="btn btn-ghost" onclick="cancelProductEdit()">Clear</button>
-        </div>
-      </div>
-      <div class="prod-list" id="prod-list"></div>
-    </div>
-
-    <!-- DATA -->
-    <div class="page" id="page-data">
-      <div class="page-header">
-        <div><div class="page-title">Data &amp; Backup</div><div class="page-sub">Export, import, and manage your data</div></div>
-      </div>
-      <div class="data-section">
-        <div class="data-section-title">Export Backup</div>
-        <div class="data-info">Download all your transactions, debts, stock, and product data as a JSON file. Keep this safe — it's your full backup.</div>
-        <div class="f-actions">
-          <button class="btn btn-acc" onclick="exportJSON()">&#x2B07; Download Backup</button>
-        </div>
-      </div>
-      <div class="data-section">
-        <div class="data-section-title">Import Backup</div>
-        <div class="data-info">Restore from a previously exported JSON backup. <span style="color:var(--amber)">Warning: this will replace all current data.</span></div>
-        <div class="f-actions">
-          <button class="btn btn-ghost" onclick="document.getElementById('import-file').click()">&#x2B06; Choose Backup File</button>
-          <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)"/>
-        </div>
-      </div>
-      <div class="data-section">
-        <div class="data-section-title">Data Summary</div>
-        <div id="data-summary" style="font-family:var(--mono);font-size:.75rem;color:var(--t2);line-height:2"></div>
-      </div>
-      <div class="data-section" style="border-color:rgba(255,69,69,.3)">
-        <div class="data-section-title" style="color:var(--red)">Danger Zone</div>
-        <div class="data-info">Permanently delete all data. This cannot be undone. Export a backup first.</div>
-        <div class="f-actions">
-          <button class="btn btn-red" style="padding:8px 16px;font-size:.73rem;" onclick="nukeData()">&#x26A0; Wipe All Data</button>
-        </div>
+      <div class="dr-custom" id="custom-range" style="display:none">
+        <input type="date" id="dr-from" class="f-inp" onchange="renderSummary()"/>
+        <span class="dr-custom-lbl">to</span>
+        <input type="date" id="dr-to" class="f-inp" onchange="renderSummary()"/>
       </div>
     </div>
+    <div class="stat-grid cols4" id="sum-stats" style="margin-bottom:10px"></div>
+    <div id="sum-groups"></div>
+    <div style="height:16px"></div>
+  </div>
 
-
-    <!-- CALENDAR -->
-    <div class="page" id="page-calendar">
-      <div class="page-header">
-        <div><div class="page-title">Calendar</div><div class="page-sub">Revenue heatmap — click any day to drill in</div></div>
-      </div>
-      <div class="cal-nav">
-        <button class="btn btn-ghost btn-sm" onclick="calShift(-1)">&#x2190; Prev</button>
-        <span class="cal-month-label" id="cal-month-label"></span>
-        <button class="btn btn-ghost btn-sm" onclick="calShift(1)">Next &#x2192;</button>
+  <!-- ── CALENDAR ── -->
+  <div class="page" id="page-calendar">
+    <div class="cal-nav">
+      <div class="cal-nav-btns">
+        <button class="btn btn-ghost btn-sm" onclick="calShift(-1)">&#x2190;</button>
         <button class="btn btn-ghost btn-sm" onclick="calGoToday()">Today</button>
       </div>
-      <div class="cal-legend">
-        <span class="cal-legend-item"><span class="cal-swatch" style="background:var(--s3)"></span>No sales</span>
-        <span class="cal-legend-item"><span class="cal-swatch" style="background:#1a4a2e"></span>Low</span>
-        <span class="cal-legend-item"><span class="cal-swatch" style="background:#1a6e40"></span>Mid</span>
-        <span class="cal-legend-item"><span class="cal-swatch" style="background:#2dce89"></span>High</span>
-        <span class="cal-legend-item"><span class="cal-swatch" style="background:rgba(255,170,0,.25);border:1px solid var(--amber)"></span>Has debt</span>
+      <span class="cal-month" id="cal-month"></span>
+      <button class="btn btn-ghost btn-sm" onclick="calShift(1)">&#x2192;</button>
+    </div>
+    <div class="cal-dow">
+      <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="cal-detail" id="cal-detail">
+      <div class="cal-detail-head">
+        <span class="cal-detail-date" id="cal-detail-date"></span>
+        <button class="btn btn-ghost btn-sm" onclick="closeCalDetail()">&#x2715;</button>
       </div>
-      <div class="cal-grid-wrap">
-        <div class="cal-dow-row">
-          <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+      <div class="stat-grid cols2" id="cal-detail-stats"></div>
+      <div id="cal-detail-body" style="padding-bottom:10px"></div>
+    </div>
+    <div style="height:16px"></div>
+  </div>
+
+  <!-- ── DATA ── -->
+  <div class="page" id="page-data">
+    <div class="pg-head"><div><div class="pg-title">Data & Backup</div></div></div>
+    <div class="data-block">
+      <div class="data-block-title">Export Backup</div>
+      <div class="data-info">Download all your data as a JSON file. Do this regularly.</div>
+      <button class="btn btn-ghost" onclick="exportJSON()">&#x2B07; Download Backup</button>
+    </div>
+    <div class="data-block">
+      <div class="data-block-title">Import Backup</div>
+      <div class="data-info" style="color:var(--amber)">Warning: replaces all current data.</div>
+      <button class="btn btn-ghost" onclick="document.getElementById('import-file').click()">&#x2B06; Choose File</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)"/>
+    </div>
+    <div class="data-block">
+      <div class="data-block-title">Products</div>
+      <div id="prod-manage"></div>
+      <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="f-group">
+          <label class="f-lbl">Name</label>
+          <input type="text" id="pf-name" class="f-inp" placeholder="Product name"/>
         </div>
-        <div class="cal-grid" id="cal-grid"></div>
+        <div class="f-group">
+          <label class="f-lbl">Price (₦)</label>
+          <input type="number" id="pf-price" class="f-inp" placeholder="0"/>
+        </div>
       </div>
-      <!-- Day detail panel -->
-      <div class="cal-detail" id="cal-detail" style="display:none">
-        <div class="cal-detail-head">
-          <div>
-            <div class="cal-detail-date" id="cal-detail-date"></div>
-            <div class="cal-detail-sub" id="cal-detail-sub"></div>
-          </div>
-          <button class="modal-close" onclick="closeCalDetail()">&#x2715;</button>
-        </div>
-        <div class="cal-detail-stats" id="cal-detail-stats"></div>
-        <div class="cal-detail-body" id="cal-detail-body"></div>
+      <input type="hidden" id="pf-edit"/>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-ghost btn-sm" onclick="submitProduct()">Save Product</button>
+        <button class="btn btn-ghost btn-sm" onclick="cancelProductEdit()">Clear</button>
       </div>
     </div>
-  </div></div>
+    <div class="data-block" id="data-summary-block">
+      <div class="data-block-title">Data Summary</div>
+      <div id="data-summary" style="font-family:var(--mono);font-size:.72rem;color:var(--t2);line-height:2"></div>
+    </div>
+    <div class="data-block" style="border-color:rgba(255,69,69,.3)">
+      <div class="data-block-title" style="color:var(--red)">Danger Zone</div>
+      <div class="data-info">Wipes everything. Export first.</div>
+      <button class="btn btn-red" style="padding:8px 14px;font-size:.72rem" onclick="nukeData()">&#x26A0; Wipe All Data</button>
+    </div>
+    <div style="height:16px"></div>
+  </div>
+
+</div><!-- /content -->
+
+<!-- BOTTOM TAB BAR -->
+<div class="tabbar">
+  <button class="tab active" id="tab-sell" onclick="goTo('sell')">
+    <span class="tab-icon">&#x2795;</span>
+    <span class="tab-label">Sell</span>
+  </button>
+  <button class="tab" id="tab-dashboard" onclick="goTo('dashboard')">
+    <span class="tab-icon">&#x25A6;</span>
+    <span class="tab-label">Dash</span>
+  </button>
+  <button class="tab" id="tab-history" onclick="goTo('history')">
+    <span class="tab-icon">&#x1F4CB;</span>
+    <span class="tab-label">History</span>
+  </button>
+  <button class="tab" id="tab-stock" onclick="goTo('stock')">
+    <span class="tab-icon">&#x1F4E6;</span>
+    <span class="tab-label">Stock</span>
+  </button>
+  <button class="tab" id="tab-debts" onclick="goTo('debts')">
+    <span class="tab-icon">&#x1F4B8;</span>
+    <span class="tab-label">Debts</span>
+  </button>
+  <button class="tab" id="tab-summary" onclick="goTo('summary')">
+    <span class="tab-icon">&#x1F4CA;</span>
+    <span class="tab-label">Summary</span>
+  </button>
+  <button class="tab" id="tab-calendar" onclick="goTo('calendar')">
+    <span class="tab-icon">&#x1F4C5;</span>
+    <span class="tab-label">Calendar</span>
+  </button>
+  <button class="tab" id="tab-data" onclick="goTo('data')">
+    <span class="tab-icon">&#x2699;</span>
+    <span class="tab-label">Data</span>
+  </button>
 </div>
 
-<!-- MODAL: generic -->
-<div class="modal-backdrop" id="modal">
-  <div class="modal">
+</div><!-- /app-shell -->
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modal" onclick="modalOutsideClick(event)">
+  <div class="modal" id="modal-inner">
+    <div class="modal-handle"></div>
     <div class="modal-head">
-      <div class="modal-title" id="modal-title">Modal</div>
+      <div class="modal-title" id="modal-title"></div>
       <button class="modal-close" onclick="closeModal()">&#x2715;</button>
     </div>
     <div class="modal-body" id="modal-body"></div>
@@ -555,379 +727,388 @@ tbody tr:hover{background:rgba(255,255,255,.02);}
 
 <script>
 // ── STATE ──────────────────────────────────────────────────────────────
-let S = { txns:[], debts:[], stock:{}, products:[] };
-const DEFAULT_PRODUCTS = [
-  {name:"Lucozade 25cl", price:600},
-  {name:"Lucozade 45cl", price:1000},
-  {name:"Ribena",        price:600},
-  {name:"Water 50cl",    price:200},
-  {name:"Soft Drink 50cl",price:500}
+const DEFAULT_PRODUCTS=[
+  {name:'Lucozade 25cl',price:600},
+  {name:'Lucozade 45cl',price:1000},
+  {name:'Ribena',price:600},
+  {name:'Water 50cl',price:200},
+  {name:'Soft Drink 50cl',price:500}
+];
+const SUPPLIER_GROUPS=[
+  {name:'Suntory',products:['Lucozade 25cl','Lucozade 45cl','Ribena']},
+  {name:'Water & Soft Drinks',products:['Water 50cl','Soft Drink 50cl']},
 ];
 
+let S={txns:[],debts:[],stock:{},products:[]};
+
+// Expose globals for Firebase module
+window.S = S;
+window.DEFAULT_PRODUCTS = DEFAULT_PRODUCTS;
+window.renderAll = ()=>{ renderKPI(); renderPage(currentPage); };
+window.toast = toast;
+window._lastHash = null;
+
 function loadState(){
+  // Load from localStorage as initial state (Firebase will override via snapshot)
   try{
     const d=localStorage.getItem('ct5');
-    if(d){ S=JSON.parse(d); }
+    if(d){ const p=JSON.parse(d); Object.assign(S,p); window.S=S; }
   }catch(e){}
   if(!S.products||!S.products.length) S.products=[...DEFAULT_PRODUCTS];
   if(!S.txns) S.txns=[];
   if(!S.debts) S.debts=[];
   if(!S.stock) S.stock={};
+  window.S=S;
 }
 function persist(){
-  try{localStorage.setItem('ct5',JSON.stringify(S));}catch(e){
-    toast('Storage full — export a backup!','err');
-  }
+  // Save to Firebase (async, non-blocking)
+  if(window._fbSave) window._fbSave(S);
+  // Always cache locally as backup
+  try{localStorage.setItem('ct5',JSON.stringify(S));}catch(e){}
 }
 loadState();
 
 // ── HELPERS ────────────────────────────────────────────────────────────
-const N    = n => '&#8358;'+Math.round(n||0).toLocaleString();
-const Nraw = n => '₦'+Math.round(n||0).toLocaleString();
-const today= ()=> new Date().toISOString().slice(0,10);
-const nowt = ()=> new Date().toTimeString().slice(0,8);
-const uid  = ()=> Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-const priceOf = name => { const p=S.products.find(x=>x.name===name); return p?p.price:0; };
+const N   = n=>'₦'+Math.round(n||0).toLocaleString();
+const today= ()=>new Date().toISOString().slice(0,10);
+const nowt = ()=>new Date().toTimeString().slice(0,8);
+const uid  = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const priceOf=name=>{const p=S.products.find(x=>x.name===name);return p?p.price:0;};
 
 function toast(msg,type='ok'){
   const el=document.getElementById('toast');
-  el.innerHTML=msg; el.className='toast show '+type;
-  setTimeout(()=>el.className='toast',2600);
+  el.textContent=msg;el.className='toast show '+type;
+  setTimeout(()=>el.className='toast',2400);
 }
 
 // ── MODAL ──────────────────────────────────────────────────────────────
-function showModal(title, bodyHTML, footerHTML){
+function showModal(title,body,footer){
   document.getElementById('modal-title').textContent=title;
-  document.getElementById('modal-body').innerHTML=bodyHTML;
-  document.getElementById('modal-footer').innerHTML=footerHTML;
+  document.getElementById('modal-body').innerHTML=body;
+  document.getElementById('modal-footer').innerHTML=footer;
   document.getElementById('modal').classList.add('open');
 }
-function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+function modalOutsideClick(e){if(e.target===document.getElementById('modal'))closeModal();}
 
 // ── NAVIGATION ─────────────────────────────────────────────────────────
-const PAGES=[
-  {id:'dashboard',   label:'Dashboard'},
-  {id:'transactions',label:'Transactions'},
-  {id:'stock',       label:'Stock'},
-  {id:'debts',       label:'Debts'},
-  {id:'debtors',     label:'Debtor Breakdown'},
-  {id:'summary',     label:'Summary'},
-  {id:'products',    label:'Products'},
-  {id:'data',        label:'Data & Backup'},
-  {id:'calendar',    label:'Calendar'},
-];
-function buildNav(cid){
-  document.getElementById(cid).innerHTML='<div class="nav-section">Menu</div>'+
-    PAGES.map(p=>`<div class="nav-item" id="ni-${cid}-${p.id}" onclick="goTo('${p.id}')"><div class="ni-dot"></div><span>${p.label}</span></div>`).join('');
-}
-buildNav('sidebar-nav'); buildNav('drawer-nav');
-
+let currentPage='sell';
 function goTo(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+id)?.classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.querySelectorAll(`[id$="-${id}"]`).forEach(n=>{if(n.classList.contains('nav-item'))n.classList.add('active');});
-  closeDrawer(); renderAll();
-  if(id==='calendar') renderCalendar();
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id)?.classList.add('active');
+  currentPage=id;
+  // Scroll content to top
+  document.getElementById('content').scrollTop=0;
+  renderPage(id);
 }
-function toggleDrawer(){
-  document.getElementById('drawer').classList.toggle('open');
-  document.getElementById('drawer-kpi').innerHTML=document.getElementById('sidebar-kpi').innerHTML;
-  document.getElementById('drawer-nav').innerHTML=document.getElementById('sidebar-nav').innerHTML;
-  PAGES.forEach(p=>{const el=document.getElementById(`ni-drawer-nav-${p.id}`);if(el)el.onclick=()=>goTo(p.id);});
+function renderPage(id){
+  if(id==='sell') renderProdGrid();
+  else if(id==='dashboard') renderDash();
+  else if(id==='history') renderHistory();
+  else if(id==='stock') {buildStockInputs();renderStockTable();}
+  else if(id==='debts') renderDebts();
+  else if(id==='summary') renderSummary();
+  else if(id==='calendar') renderCalendar();
+  else if(id==='data') renderData();
 }
-function closeDrawer(){ document.getElementById('drawer').classList.remove('open'); }
-function closeDrawerOutside(e){ if(e.target===document.getElementById('drawer'))closeDrawer(); }
+function renderAll(){
+  renderKPI();
+  renderPage(currentPage);
+}
 
-// ── PRODUCT SELECTS ────────────────────────────────────────────────────
-function rebuildProductSelects(){
-  const opts = S.products.map(p=>`<option value="${p.name}">${p.name} &mdash; ${Nraw(p.price)}</option>`).join('');
-  const bare = S.products.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
-  const fprod = document.getElementById('f-prod');
-  const dprod = document.getElementById('d-prod');
-  const flprod= document.getElementById('fl-prod');
-  if(fprod) fprod.innerHTML=opts;
-  if(dprod) dprod.innerHTML=bare;
-  if(flprod){
-    flprod.innerHTML='<option value="">All Products</option>'+bare;
+// ── KPI STRIP ──────────────────────────────────────────────────────────
+function renderKPI(){
+  const td=today();
+  const todayTxns=S.txns.filter(t=>t.date===td);
+  const todayRev=todayTxns.reduce((a,t)=>a+t.total,0);
+  const totalDebt=S.debts.filter(d=>d.status==='pending').reduce((a,d)=>a+(d.owed-d.paid),0);
+  const allRev=S.txns.reduce((a,t)=>a+t.total,0);
+  document.getElementById('kpi-strip').innerHTML=`
+    <div class="kpi-item"><div class="kpi-lbl">Today</div><div class="kpi-val acc">${N(todayRev)}</div></div>
+    <div class="kpi-item"><div class="kpi-lbl">All Time</div><div class="kpi-val green">${N(allRev)}</div></div>
+    <div class="kpi-item"><div class="kpi-lbl">Debt</div><div class="kpi-val red">${N(totalDebt)}</div></div>
+    <div class="kpi-item"><div class="kpi-lbl">Txns</div><div class="kpi-val">${S.txns.length}</div></div>
+    <div class="kpi-item" style="min-width:60px"><div class="kpi-lbl">Sync</div><div class="kpi-val" id="sync-status" style="color:var(--green);font-size:.65rem">&#x2714; Live</div></div>`;
+  document.getElementById('top-date').textContent=new Date().toLocaleDateString('en-NG',{day:'numeric',month:'short'});
+}
+
+// ── SELL PAGE ──────────────────────────────────────────────────────────
+let cart={};
+let selPay='Cash';
+let selDebt='No';
+
+function renderProdGrid(){
+  document.getElementById('prod-grid').innerHTML=S.products.map(p=>{
+    const qty=cart[p.name]||0;
+    return `<div class="prod-tile${qty>0?' in-cart':''}" onclick="addToCart('${p.name.replace(/'/g,"\\'")}')">
+      ${qty>0?`<div class="prod-tile-qty">${qty}</div>`:''}
+      <div class="prod-tile-name">${p.name}</div>
+      <div class="prod-tile-price">${N(p.price)}</div>
+    </div>`;
+  }).join('');
+  renderCart();
+}
+
+function addToCart(name){
+  cart[name]=(cart[name]||0)+1;
+  renderProdGrid();
+}
+
+function changeQty(name,delta){
+  cart[name]=(cart[name]||0)+delta;
+  if(cart[name]<=0) delete cart[name];
+  renderProdGrid();
+}
+
+function clearCart(){
+  cart={};selPay='Cash';selDebt='No';
+  document.getElementById('pay-cash').classList.add('active');
+  document.getElementById('pay-transfer').classList.remove('active');
+  document.getElementById('debt-no').classList.add('active');
+  document.getElementById('debt-yes').classList.remove('active');
+  document.getElementById('s-cust').value='';
+  document.getElementById('s-by').value='';
+  renderProdGrid();
+}
+
+function setPay(v){
+  selPay=v;
+  document.getElementById('pay-cash').classList.toggle('active',v==='Cash');
+  document.getElementById('pay-transfer').classList.toggle('active',v==='Transfer');
+}
+function setDebt(v){
+  selDebt=v;
+  document.getElementById('debt-no').classList.toggle('active',v==='No');
+  document.getElementById('debt-yes').classList.toggle('active',v==='Yes');
+}
+
+function renderCart(){
+  const items=Object.entries(cart);
+  const empty=document.getElementById('cart-empty');
+  const itemsEl=document.getElementById('cart-items');
+  const footer=document.getElementById('cart-footer');
+  if(!items.length){
+    empty.style.display='block';
+    itemsEl.style.display='none';
+    footer.style.display='none';
+    return;
   }
+  empty.style.display='none';
+  itemsEl.style.display='flex';
+  footer.style.display='block';
+  let total=0;
+  itemsEl.innerHTML=items.map(([name,qty])=>{
+    const price=priceOf(name);
+    const subtotal=price*qty;
+    total+=subtotal;
+    return `<div class="cart-item">
+      <div class="cart-item-name">${name}</div>
+      <div class="cart-item-controls">
+        <button class="qty-btn" onclick="changeQty('${name.replace(/'/g,"\\'")}', -1)">−</button>
+        <span class="cart-item-qty">${qty}</span>
+        <button class="qty-btn" onclick="changeQty('${name.replace(/'/g,"\\'")}', 1)">+</button>
+      </div>
+      <div class="cart-item-total">${N(subtotal)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('cart-total').textContent=N(total);
 }
 
-// ── TRANSACTIONS ───────────────────────────────────────────────────────
-function submitTxn(){
-  const editId = document.getElementById('f-edit-id').value;
-  const prod   = document.getElementById('f-prod').value;
-  const qty    = Math.max(1,parseInt(document.getElementById('f-qty').value)||1);
-  const pay    = document.getElementById('f-pay').value;
-  const cust   = document.getElementById('f-cust').value.trim()||'Walk-in';
-  const isDebt = document.getElementById('f-debt').value;
-  const by     = document.getElementById('f-by').value.trim()||'—';
-  const date   = document.getElementById('f-date').value||today();
-  const price  = priceOf(prod);
-  const total  = price*qty;
+function submitSale(){
+  const items=Object.entries(cart);
+  if(!items.length){toast('Add products first','err');return;}
+  const date=document.getElementById('s-date').value||today();
+  const cust=document.getElementById('s-cust').value.trim()||'Walk-in';
+  const by=document.getElementById('s-by').value.trim()||'—';
+  const tm=nowt();
 
-  if(editId){
-    // EDIT MODE
-    const idx = S.txns.findIndex(t=>t.id===editId);
-    if(idx===-1){toast('Transaction not found','err');return;}
-    const old = S.txns[idx];
-    // If was a debt, update the linked debt entry amount
-    if(old.isDebt==='Yes'){
-      syncDebtEntryEdit(old, {prod,qty,price,total,date});
-    }
-    S.txns[idx]={...old, prod, qty, price, total, pay, cust, isDebt, by, date};
-    // If newly marked as debt
-    if(isDebt==='Yes' && old.isDebt!=='Yes'){
-      attachDebtEntry(S.txns[idx]);
-    }
-    persist(); renderAll();
-    toast('Transaction updated');
-    cancelTxnEdit();
-  } else {
-    // ADD MODE
-    const id  = 'TXN-'+uid();
-    const tm  = nowt();
-    S.txns.unshift({id, date, time:tm, prod, qty, price, total, pay, cust, isDebt, by});
-    if(isDebt==='Yes'){
-      attachDebtEntry(S.txns[0]);
-    }
-    persist(); renderAll();
-    toast(id+' &mdash; '+N(total));
-    document.getElementById('f-qty').value=1;
-    document.getElementById('f-cust').value='';
-    document.getElementById('f-debt').value='No';
-  }
+  items.forEach(([name,qty])=>{
+    const price=priceOf(name);
+    const total=price*qty;
+    const id='TXN-'+uid();
+    S.txns.unshift({id,date,time:tm,prod:name,qty,price,total,pay:selPay,cust,isDebt:selDebt,by});
+    if(selDebt==='Yes') attachDebtEntry({id,date,time:tm,prod:name,qty,price,total,cust});
+  });
+
+  const grandTotal=items.reduce((a,[n,q])=>a+priceOf(n)*q,0);
+  persist();renderAll();
+  toast(`Recorded — ${N(grandTotal)}`);
+  clearCart();
 }
 
-function attachDebtEntry(txn){
-  const cust = txn.cust;
-  const ex   = S.debts.find(d=>d.cust.toLowerCase()===cust.toLowerCase()&&d.status==='pending');
-  if(ex){
-    ex.owed+=txn.total;
-    ex.entries=ex.entries||[];
-    ex.entries.push({txnId:txn.id,date:txn.date,time:txn.time,prod:txn.prod,qty:txn.qty,amount:txn.total});
-  } else {
-    S.debts.unshift({
-      id:txn.id, date:txn.date, time:txn.time, cust, prod:txn.prod,
-      owed:txn.total, paid:0, status:'pending',
-      entries:[{txnId:txn.id,date:txn.date,time:txn.time,prod:txn.prod,qty:txn.qty,amount:txn.total}],
-      payments:[]
-    });
-  }
+// ── DASHBOARD ──────────────────────────────────────────────────────────
+function renderDash(){
+  const td=today();
+  const tt=S.txns.filter(t=>t.date===td);
+  const cash=tt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
+  const trans=tt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+  const pDebt=S.debts.filter(d=>d.status==='pending').reduce((a,d)=>a+(d.owed-d.paid),0);
+  const txnCount=tt.length;
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat-cell"><div class="stat-lbl">Today Revenue</div><div class="stat-val acc">${N(cash+trans)}</div></div>
+    <div class="stat-cell"><div class="stat-lbl">Cash</div><div class="stat-val grn">${N(cash)}</div></div>
+    <div class="stat-cell"><div class="stat-lbl">Transfer</div><div class="stat-val blu">${N(trans)}</div></div>
+    <div class="stat-cell"><div class="stat-lbl">Transactions</div><div class="stat-val">${txnCount}</div></div>
+    <div class="stat-cell"><div class="stat-lbl">Debt Outstanding</div><div class="stat-val red">${N(pDebt)}</div></div>
+    <div class="stat-cell"><div class="stat-lbl">All Time</div><div class="stat-val">${N(S.txns.reduce((a,t)=>a+t.total,0))}</div></div>`;
+  document.getElementById('dash-ledgers').innerHTML=S.products.map(p=>buildLedger(p.name,tt)).join('');
 }
 
-function syncDebtEntryEdit(old, updated){
-  // Find debt that has this txn as an entry and adjust amount
-  for(const d of S.debts){
-    if(!d.entries) continue;
-    const ei = d.entries.findIndex(e=>e.txnId===old.id);
-    if(ei!==-1){
-      const diff = updated.total - d.entries[ei].amount;
-      d.owed += diff;
-      d.entries[ei].amount = updated.total;
-      d.entries[ei].prod   = updated.prod;
-      d.entries[ei].qty    = updated.qty;
-      d.entries[ei].date   = updated.date;
-      // re-check status
-      if(d.paid >= d.owed) d.status='cleared';
-      else d.status='pending';
-      break;
-    }
-  }
+function buildLedger(prod,txns){
+  const pt=txns.filter(t=>t.prod===prod);
+  const units=pt.reduce((a,t)=>a+t.qty,0);
+  const cash=pt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
+  const trans=pt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+  return `<div class="ledger">
+    <div class="ledger-head"><div class="ledger-name">${prod}</div><div class="ledger-total">${N(cash+trans)}</div></div>
+    <div class="ledger-body">
+      <div class="ledger-cell"><div class="ledger-cell-lbl">Units</div><div class="ledger-cell-val">${units}</div></div>
+      <div class="ledger-cell"><div class="ledger-cell-lbl">Cash</div><div class="ledger-cell-val green">${N(cash)}</div></div>
+      <div class="ledger-cell"><div class="ledger-cell-lbl">Transfer</div><div class="ledger-cell-val blue">${N(trans)}</div></div>
+      <div class="ledger-cell"><div class="ledger-cell-lbl">Total</div><div class="ledger-cell-val acc">${N(cash+trans)}</div></div>
+    </div></div>`;
 }
 
+// ── HISTORY ────────────────────────────────────────────────────────────
+function renderHistory(){
+  // rebuild product filter options
+  const flprod=document.getElementById('fl-prod');
+  const curVal=flprod.value;
+  flprod.innerHTML='<option value="">All Products</option>'+S.products.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
+  flprod.value=curVal;
+
+  const fd=document.getElementById('fl-date').value;
+  const fp=flprod.value;
+  const rows=S.txns.filter(t=>(!fd||t.date===fd)&&(!fp||t.prod===fp));
+  const tb=document.getElementById('history-body');
+  if(!rows.length){tb.innerHTML=`<tr><td colspan="10" class="empty">No transactions found.</td></tr>`;return;}
+  tb.innerHTML=rows.map(t=>`<tr>
+    <td class="txnid">${t.id}</td>
+    <td>${t.date}</td><td>${t.time||'—'}</td>
+    <td class="sans">${t.prod}</td>
+    <td>${t.qty}</td>
+    <td class="green">${N(t.total)}</td>
+    <td><span class="chip chip-${(t.pay||'').toLowerCase()}">${t.pay}</span></td>
+    <td class="sans">${t.cust}</td>
+    <td>${t.isDebt==='Yes'?'<span class="chip chip-debt">Debt</span>':'—'}</td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-blue" onclick="editTxn('${t.id}')">Edit</button>
+      <button class="btn btn-red" onclick="delTxn('${t.id}')" style="margin-left:4px">&#x2715;</button>
+    </td>
+  </tr>`).join('');
+}
+function clearHistoryFilters(){
+  document.getElementById('fl-date').value='';
+  document.getElementById('fl-prod').value='';
+  renderHistory();
+}
 function editTxn(id){
-  const t = S.txns.find(x=>x.id===id);
+  const t=S.txns.find(x=>x.id===id);
   if(!t) return;
-  document.getElementById('f-edit-id').value = t.id;
-  document.getElementById('f-date').value    = t.date;
-  document.getElementById('f-prod').value    = t.prod;
-  document.getElementById('f-qty').value     = t.qty;
-  document.getElementById('f-pay').value     = t.pay;
-  document.getElementById('f-cust').value    = t.cust;
-  document.getElementById('f-debt').value    = t.isDebt;
-  document.getElementById('f-by').value      = t.by;
-  document.getElementById('txn-form-title').textContent = 'Editing: '+t.id;
-  document.getElementById('txn-submit-btn').textContent = 'Save Changes';
-  document.getElementById('txn-form-block').style.borderColor='var(--blue)';
-  document.getElementById('txn-form-block').scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-function cancelTxnEdit(){
-  document.getElementById('f-edit-id').value='';
-  document.getElementById('f-date').value=today();
-  document.getElementById('f-qty').value=1;
-  document.getElementById('f-cust').value='';
-  document.getElementById('f-by').value='';
-  document.getElementById('f-debt').value='No';
-  document.getElementById('txn-form-title').textContent='New Transaction';
-  document.getElementById('txn-submit-btn').textContent='Add Transaction';
-  document.getElementById('txn-form-block').style.borderColor='';
-}
-
-function delTxn(id){
-  const t = S.txns.find(x=>x.id===id);
-  if(!t) return;
-  showModal(
-    'Delete Transaction',
-    `<div class="modal-danger">This will permanently delete <strong>${t.id}</strong>.<br/><br/>
-    Product: ${t.prod}<br/>Qty: ${t.qty} &mdash; Total: ${Nraw(t.total)}<br/>Date: ${t.date}<br/>Customer: ${t.cust}
-    ${t.isDebt==='Yes'?'<br/><br/>&#x26A0; This was marked as a debt. The linked debt entry will also be removed.':''}
+  const prodOpts=S.products.map(p=>`<option value="${p.name}"${p.name===t.prod?' selected':''}>${p.name}</option>`).join('');
+  showModal('Edit Transaction',
+    `<div class="modal-info" style="margin-bottom:8px">${t.id} &mdash; ${t.date}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="f-group"><label class="f-lbl">Product</label><select class="f-inp" id="et-prod">${prodOpts}</select></div>
+      <div class="f-group"><label class="f-lbl">Qty</label><input class="f-inp" type="number" id="et-qty" value="${t.qty}" min="1"/></div>
+      <div class="f-group"><label class="f-lbl">Payment</label>
+        <select class="f-inp" id="et-pay"><option${t.pay==='Cash'?' selected':''}>Cash</option><option${t.pay==='Transfer'?' selected':''}>Transfer</option></select>
+      </div>
+      <div class="f-group"><label class="f-lbl">Customer</label><input class="f-inp" type="text" id="et-cust" value="${t.cust}"/></div>
+      <div class="f-group"><label class="f-lbl">Date</label><input class="f-inp" type="date" id="et-date" value="${t.date}"/></div>
+      <div class="f-group"><label class="f-lbl">By</label><input class="f-inp" type="text" id="et-by" value="${t.by}"/></div>
     </div>`,
-    `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-     <button class="btn" style="background:var(--red);color:#fff" onclick="confirmDelTxn('${id}')">Delete</button>`
+    `<button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-acc" style="flex:2" onclick="saveEditTxn('${id}')">Save</button>`
   );
 }
-
-function confirmDelTxn(id){
-  const idx = S.txns.findIndex(t=>t.id===id);
+function saveEditTxn(id){
+  const idx=S.txns.findIndex(t=>t.id===id);
   if(idx===-1){closeModal();return;}
-  const t = S.txns[idx];
-  // Remove from linked debt
+  const old=S.txns[idx];
+  const prod=document.getElementById('et-prod').value;
+  const qty=Math.max(1,parseInt(document.getElementById('et-qty').value)||1);
+  const pay=document.getElementById('et-pay').value;
+  const cust=document.getElementById('et-cust').value.trim()||'Walk-in';
+  const date=document.getElementById('et-date').value||today();
+  const by=document.getElementById('et-by').value.trim()||'—';
+  const price=priceOf(prod);
+  const total=price*qty;
+  if(old.isDebt==='Yes') syncDebtEntryEdit(old,{prod,qty,price,total,date});
+  S.txns[idx]={...old,prod,qty,price,total,pay,cust,date,by};
+  persist();renderAll();closeModal();
+  toast('Transaction updated');
+}
+function delTxn(id){
+  const t=S.txns.find(x=>x.id===id);
+  if(!t) return;
+  showModal('Delete Transaction',
+    `<div class="modal-danger">Delete <strong>${t.id}</strong>?<br/>${t.prod} x${t.qty} — ${N(t.total)} — ${t.date}
+    ${t.isDebt==='Yes'?'<br/><br/>&#x26A0; Linked debt entry will also be removed.':''}</div>`,
+    `<button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+     <button class="btn" style="flex:1;background:var(--red);color:#fff" onclick="confirmDelTxn('${id}')">Delete</button>`
+  );
+}
+function confirmDelTxn(id){
+  const idx=S.txns.findIndex(t=>t.id===id);
+  if(idx===-1){closeModal();return;}
+  const t=S.txns[idx];
   if(t.isDebt==='Yes'){
     for(const d of S.debts){
       if(!d.entries) continue;
-      const ei = d.entries.findIndex(e=>e.txnId===id);
+      const ei=d.entries.findIndex(e=>e.txnId===id);
       if(ei!==-1){
-        d.owed -= d.entries[ei].amount;
+        d.owed-=d.entries[ei].amount;
         d.entries.splice(ei,1);
-        if(d.owed<=0 || d.entries.length===0){
-          // Remove the whole debt record if no entries left
-          const di=S.debts.indexOf(d);
-          S.debts.splice(di,1);
-        } else if(d.paid>=d.owed){
-          d.status='cleared';
-        }
+        if(!d.entries.length||d.owed<=0) S.debts.splice(S.debts.indexOf(d),1);
+        else if(d.paid>=d.owed) d.status='cleared';
         break;
       }
     }
   }
   S.txns.splice(idx,1);
-  persist(); renderAll(); closeModal();
-  toast('Transaction deleted','err');
+  persist();renderAll();closeModal();
+  toast('Deleted','err');
 }
 
-function clearTxnFilters(){
-  document.getElementById('fl-date').value='';
-  document.getElementById('fl-prod').value='';
-  document.getElementById('fl-pay').value='';
-  renderTxnTable();
-}
-
-function txnFilter(){
-  const fd=document.getElementById('fl-date')?.value;
-  const fp=document.getElementById('fl-prod')?.value;
-  const fy=document.getElementById('fl-pay')?.value;
-  return S.txns.filter(t=>(!fd||t.date===fd)&&(!fp||t.prod===fp)&&(!fy||t.pay===fy));
-}
-
-// ── STOCK ──────────────────────────────────────────────────────────────
-function getStockDate(){ return document.getElementById('stock-date')?.value||today(); }
-
-function getOpeningStock(prodName, date){
-  if(S.stock[date+'::'+prodName] != null) return S.stock[date+'::'+prodName];
-  const prev = Object.keys(S.stock)
-    .filter(k => k.endsWith('::'+prodName) && k.slice(0,10) < date)
-    .sort().reverse();
-  if(!prev.length) return 0;
-  const lastDate = prev[0].slice(0,10);
-  const lastOpening = S.stock[prev[0]];
-  const soldThatDay = soldOfOnDate(prodName, lastDate);
-  return Math.max(0, lastOpening - soldThatDay);
-}
-
-function loadStockForDate(){
-  const d = getStockDate();
-  S.products.forEach(p=>{
-    const el=document.getElementById('si-'+p.name.replace(/ /g,'_'));
-    if(el) el.value = getOpeningStock(p.name, d);
-  });
-}
-
-function buildStockInputs(){
-  const d = getStockDate();
-  document.getElementById('stock-inputs').innerHTML=S.products.map(p=>{
-    const val = getOpeningStock(p.name, d);
-    const isManual = S.stock[d+'::'+p.name] != null;
-    const tag = !isManual ? ' <span style="color:var(--t3);font-size:.55rem">(auto)</span>' : '';
-    return '<div class="f-group"><label class="f-label">'+p.name+tag+'</label>'
-      +'<input type="number" id="si-'+p.name.replace(/ /g,'_')+'" class="f-inp" value="'+val+'" min="0"/></div>';
-  }).join('');
-}
-
-
-function saveStock(){
-  const d = getStockDate();
-  const newVals = {};
-  S.products.forEach(p=>{
-    const el=document.getElementById('si-'+p.name.replace(/ /g,'_'));
-    if(el) newVals[p.name]=parseInt(el.value)||0;
-  });
-  const hasExisting = S.products.some(p=>S.stock[d+'::'+p.name]!=null);
-  if(hasExisting){
-    const rows=S.products.map(p=>{
-      const cur=S.stock[d+'::'+p.name]!=null?S.stock[d+'::'+p.name]:getOpeningStock(p.name,d);
-      const nv=newVals[p.name];
-      return `<tr>
-        <td class="sans" style="padding:5px 8px;font-size:.75rem">${p.name}</td>
-        <td style="padding:5px 8px;font-family:var(--mono);font-size:.75rem">${cur}</td>
-        <td style="padding:5px 8px;font-family:var(--mono);font-size:.75rem">${nv}</td>
-        <td style="padding:5px 8px;font-family:var(--mono);font-size:.75rem;color:var(--green)">${cur+nv}</td>
-      </tr>`;
-    }).join('');
-    const nvEncoded = encodeURIComponent(JSON.stringify(newVals));
-    showModal(
-      'Update Stock — '+d,
-      `<div class="modal-info" style="margin-bottom:12px">Stock already set for this date. How do you want to apply the new values?</div>
-      <table style="width:100%;border-collapse:collapse">
-        <thead><tr>
-          <th style="padding:5px 8px;text-align:left;font-size:.58rem;color:var(--t2);text-transform:uppercase">Product</th>
-          <th style="padding:5px 8px;text-align:left;font-size:.58rem;color:var(--t2);text-transform:uppercase">Current</th>
-          <th style="padding:5px 8px;text-align:left;font-size:.58rem;color:var(--t2);text-transform:uppercase">Entered</th>
-          <th style="padding:5px 8px;text-align:left;font-size:.58rem;color:var(--t2);text-transform:uppercase">If Added</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>`,
-      `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-       <button class="btn btn-ghost" onclick="applyStock('overwrite','${d}','${nvEncoded}')">Overwrite</button>
-       <button class="btn btn-acc" onclick="applyStock('add','${d}','${nvEncoded}')">Add to Current</button>`
-    );
+// ── DEBT HELPERS ───────────────────────────────────────────────────────
+function attachDebtEntry(txn){
+  const ex=S.debts.find(d=>d.cust.toLowerCase()===txn.cust.toLowerCase()&&d.status==='pending');
+  if(ex){
+    ex.owed+=txn.total;
+    ex.entries=ex.entries||[];
+    ex.entries.push({txnId:txn.id,date:txn.date,time:txn.time,prod:txn.prod,qty:txn.qty,amount:txn.total});
   } else {
-    applyStock('overwrite', d, encodeURIComponent(JSON.stringify(newVals)));
+    S.debts.unshift({id:txn.id,date:txn.date,time:txn.time,cust:txn.cust,prod:txn.prod,
+      owed:txn.total,paid:0,status:'pending',
+      entries:[{txnId:txn.id,date:txn.date,time:txn.time,prod:txn.prod,qty:txn.qty,amount:txn.total}],
+      payments:[]});
+  }
+}
+function syncDebtEntryEdit(old,updated){
+  for(const d of S.debts){
+    if(!d.entries) continue;
+    const ei=d.entries.findIndex(e=>e.txnId===old.id);
+    if(ei!==-1){
+      const diff=updated.total-d.entries[ei].amount;
+      d.owed+=diff;
+      d.entries[ei]={...d.entries[ei],prod:updated.prod,qty:updated.qty,amount:updated.total,date:updated.date};
+      if(d.paid>=d.owed) d.status='cleared';
+      break;
+    }
   }
 }
 
-function applyStock(mode, d, nvEncoded){
-  const newVals = JSON.parse(decodeURIComponent(nvEncoded));
-  S.products.forEach(p=>{
-    const key=d+'::'+p.name;
-    if(mode==='add'){
-      const cur=S.stock[key]!=null?S.stock[key]:getOpeningStock(p.name,d);
-      S.stock[key]=cur+(newVals[p.name]||0);
-    } else {
-      S.stock[key]=newVals[p.name]||0;
-    }
-  });
-  persist(); renderAll(); closeModal();
-  toast('Stock '+(mode==='add'?'added to':'saved for')+' '+d);
-}
-
-function soldOfOnDate(prodName, date){
-  return S.txns.filter(t=>t.prod===prodName&&t.date===date).reduce((a,t)=>a+t.qty,0);
-}
-
-// ── DEBT ───────────────────────────────────────────────────────────────
+// ── DEBTS ──────────────────────────────────────────────────────────────
 function checkDebtorName(){
   const val=document.getElementById('d-name').value.trim().toLowerCase();
   const warn=document.getElementById('d-name-warn');
   if(!val){warn.style.display='none';return;}
   const similar=S.debts.filter(d=>d.status==='pending'&&d.cust.toLowerCase().includes(val)&&d.cust.toLowerCase()!==val);
-  if(similar.length){
-    warn.textContent='Similar name exists: '+similar.map(d=>d.cust).join(', ')+'. Check spelling.';
-    warn.style.display='block';
-  } else {
-    warn.style.display='none';
-  }
+  if(similar.length){warn.textContent='Similar: '+similar.map(d=>d.cust).join(', ');warn.style.display='block';}
+  else warn.style.display='none';
 }
 
 function submitDebt(){
@@ -938,50 +1119,36 @@ function submitDebt(){
   if(!name||!amt){toast('Fill name and amount','err');return;}
   const prod=document.getElementById('d-prod').value;
   const price=priceOf(prod);
-  const tm=nowt();
   const qty=price>0?Math.max(1,Math.round(amt/price)):1;
-  const total=amt;
+  const tm=nowt();
 
   if(editIdx!==''){
-    // EDIT MODE — editing a whole debt record
     const di=parseInt(editIdx);
     const d=S.debts[di];
-    if(!d){toast('Debt not found','err');return;}
-    // Find and update the first entry and its linked transaction
+    if(!d){toast('Not found','err');return;}
     const firstEntry=d.entries&&d.entries[0];
     if(firstEntry){
-      const diff=total-firstEntry.amount;
+      const diff=amt-firstEntry.amount;
       d.owed=Math.max(0,d.owed+diff);
-      firstEntry.prod=prod;
-      firstEntry.qty=qty;
-      firstEntry.amount=total;
-      // Update linked transaction
+      firstEntry.prod=prod;firstEntry.qty=qty;firstEntry.amount=amt;
       const txn=S.txns.find(t=>t.id===firstEntry.txnId);
-      if(txn){txn.prod=prod;txn.qty=qty;txn.price=price;txn.total=total;txn.cust=name;txn.date=date;}
+      if(txn){txn.prod=prod;txn.qty=qty;txn.price=price;txn.total=amt;txn.cust=name;txn.date=date;}
     }
-    d.cust=name; d.prod=prod; d.date=date;
-    persist(); renderAll();
-    toast('Debt updated');
-    cancelDebtEdit();
-    return;
+    d.cust=name;d.prod=prod;d.date=date;
+    persist();renderAll();toast('Debt updated');cancelDebtEdit();return;
   }
 
-  // ADD MODE
   const id='TXN-'+uid();
-  // Create a real transaction so stock is affected
-  S.txns.unshift({id,date,time:tm,prod,qty,price,total,pay:'Cash',cust:name,isDebt:'Yes',by:'Manual'});
+  S.txns.unshift({id,date,time:tm,prod,qty,price,total:amt,pay:'Cash',cust:name,isDebt:'Yes',by:'Manual'});
   const ex=S.debts.find(d=>d.cust.toLowerCase()===name.toLowerCase()&&d.status==='pending');
   if(ex){
-    ex.owed+=total;
-    ex.entries=ex.entries||[];
-    ex.entries.push({txnId:id,date,time:tm,prod,qty,amount:total});
+    ex.owed+=amt;ex.entries=ex.entries||[];
+    ex.entries.push({txnId:id,date,time:tm,prod,qty,amount:amt});
   } else {
-    S.debts.unshift({id,date,time:tm,cust:name,prod,owed:total,paid:0,status:'pending',
-      entries:[{txnId:id,date,time:tm,prod,qty,amount:total}],payments:[]});
+    S.debts.unshift({id,date,time:tm,cust:name,prod,owed:amt,paid:0,status:'pending',
+      entries:[{txnId:id,date,time:tm,prod,qty,amount:amt}],payments:[]});
   }
-  persist(); renderAll();
-  toast('Debt added &mdash; '+name);
-  cancelDebtEdit();
+  persist();renderAll();toast('Debt added — '+name);cancelDebtEdit();
 }
 
 function cancelDebtEdit(){
@@ -992,12 +1159,11 @@ function cancelDebtEdit(){
   document.getElementById('d-name-warn').style.display='none';
   document.getElementById('debt-form-title').textContent='Add Manual Debt';
   document.getElementById('debt-submit-btn').textContent='Add Debt';
-  document.getElementById('debt-form-block').style.borderColor='';
+  document.getElementById('debt-form-card').style.borderColor='';
 }
 
 function editDebtRecord(i){
-  const d=S.debts[i];
-  if(!d) return;
+  const d=S.debts[i];if(!d) return;
   document.getElementById('d-edit-idx').value=i;
   document.getElementById('d-name').value=d.cust;
   document.getElementById('d-prod').value=d.prod;
@@ -1005,36 +1171,29 @@ function editDebtRecord(i){
   document.getElementById('d-date').value=d.date;
   document.getElementById('debt-form-title').textContent='Editing: '+d.cust;
   document.getElementById('debt-submit-btn').textContent='Save Changes';
-  document.getElementById('debt-form-block').style.borderColor='var(--blue)';
-  document.getElementById('debt-form-block').scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('debt-form-card').style.borderColor='var(--blue)';
+  document.getElementById('debt-form-card').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-// Payment modal
 let activeDebtIdx=null;
 function markPaid(i){
   activeDebtIdx=i;
   const d=S.debts[i];
   const bal=d.owed-d.paid;
-  showModal(
-    'Record Payment &mdash; '+d.cust,
-    `<div class="modal-info">Balance: <span style="color:var(--red);font-weight:600">${Nraw(bal)}</span></div>
-     <div class="f-group"><label class="f-label">Payment Amount (&#8358;)</label>
-       <input class="f-inp" type="number" id="modal-amt" placeholder="0" style="margin-top:4px"/>
-     </div>
-     <div class="f-group"><label class="f-label">Note (optional)</label>
-       <input class="f-inp" type="text" id="modal-note" placeholder="e.g. paid cash" style="margin-top:4px"/>
-     </div>`,
-    `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-     <button class="btn btn-acc" onclick="submitPayment()">Record Payment</button>`
+  showModal('Record Payment — '+d.cust,
+    `<div class="modal-info" style="margin-bottom:8px">Balance: <span class="red bold">${N(bal)}</span></div>
+    <div class="f-group"><label class="f-lbl">Payment Amount (₦)</label><input class="f-inp" type="number" id="modal-amt" placeholder="0" style="margin-top:4px"/></div>
+    <div class="f-group" style="margin-top:8px"><label class="f-lbl">Note (optional)</label><input class="f-inp" type="text" id="modal-note" placeholder="e.g. paid cash" style="margin-top:4px"/></div>`,
+    `<button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+     <button class="btn btn-acc" style="flex:2" onclick="submitPayment()">Record Payment</button>`
   );
   setTimeout(()=>document.getElementById('modal-amt')?.focus(),100);
 }
-
 function submitPayment(){
   if(activeDebtIdx===null) return;
   const d=S.debts[activeDebtIdx];
   const p=parseFloat(document.getElementById('modal-amt')?.value);
-  if(!p||isNaN(p)||p<=0){toast('Enter a valid amount','err');return;}
+  if(!p||isNaN(p)||p<=0){toast('Enter valid amount','err');return;}
   const note=document.getElementById('modal-note')?.value.trim()||'—';
   d.payments=d.payments||[];
   d.payments.push({date:today(),time:nowt(),amount:p,note});
@@ -1042,13 +1201,13 @@ function submitPayment(){
   if(d.paid>=d.owed){
     const txnIds=new Set((d.entries||[]).map(e=>e.txnId));
     txnIds.add(d.id);
-    S.txns.forEach(t=>{ if(txnIds.has(t.id)) t.isDebt='No'; });
+    S.txns.forEach(t=>{if(txnIds.has(t.id))t.isDebt='No';});
     S.debts.splice(activeDebtIdx,1);
-    persist(); renderAll(); closeModal();
+    persist();renderAll();closeModal();
     toast('Debt cleared — '+d.cust);
   } else {
     d.status='pending';
-    persist(); renderAll(); closeModal();
+    persist();renderAll();closeModal();
     toast('Payment: '+N(p));
   }
   activeDebtIdx=null;
@@ -1057,431 +1216,201 @@ function submitPayment(){
 function delDebt(i){
   const d=S.debts[i];
   const txnIds=(d.entries||[]).map(e=>e.txnId);
-  const linkedCount=txnIds.filter(id=>S.txns.find(t=>t.id===id)).length;
-  showModal(
-    'Delete Debt Record',
-    `<div class="modal-danger">Delete debt for <strong>${d.cust}</strong>?<br/>
-    Owed: ${Nraw(d.owed)} &mdash; Paid: ${Nraw(d.paid)}<br/>Balance: ${Nraw(d.owed-d.paid)}<br/><br/>
-    ${linkedCount>0?`&#x26A0; <strong>${linkedCount} linked transaction(s) will also be deleted</strong> so stock stays accurate.`:'No linked transactions found.'}</div>`,
-    `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-     <button class="btn" style="background:var(--red);color:#fff" onclick="confirmDelDebt(${i})">Delete</button>`
+  const linked=txnIds.filter(id=>S.txns.find(t=>t.id===id)).length;
+  showModal('Delete Debt',
+    `<div class="modal-danger">Delete debt for <strong>${d.cust}</strong>?<br/>Balance: ${N(d.owed-d.paid)}
+    ${linked?`<br/><br/>&#x26A0; ${linked} linked transaction(s) will also be deleted.`:''}</div>`,
+    `<button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+     <button class="btn" style="flex:1;background:var(--red);color:#fff" onclick="confirmDelDebt(${i})">Delete</button>`
   );
 }
-
 function confirmDelDebt(i){
   const d=S.debts[i];
-  // Remove linked transactions so stock stays accurate
   const txnIds=new Set((d.entries||[]).map(e=>e.txnId));
   txnIds.add(d.id);
   S.txns=S.txns.filter(t=>!txnIds.has(t.id));
   S.debts.splice(i,1);
-  persist(); renderAll(); closeModal();
-  toast('Debt and linked transactions deleted','err');
+  persist();renderAll();closeModal();toast('Deleted','err');
 }
 
-// ── PRODUCTS ───────────────────────────────────────────────────────────
-function submitProduct(){
-  const editName = document.getElementById('pf-edit-name').value;
-  const name  = document.getElementById('pf-name').value.trim();
-  const price = parseFloat(document.getElementById('pf-price').value);
-  if(!name||!price||price<=0){toast('Name and price required','err');return;}
-
-  if(editName){
-    const idx=S.products.findIndex(p=>p.name===editName);
-    if(idx!==-1){
-      // Update name in all txns and debts if name changed
-      if(name!==editName){
-        S.txns.forEach(t=>{if(t.prod===editName)t.prod=name;});
-        S.debts.forEach(d=>{
-          if(d.prod===editName)d.prod=name;
-          (d.entries||[]).forEach(e=>{if(e.prod===editName)e.prod=name;});
-        });
-        // Update stock keys
-        const newStock={};
-        Object.entries(S.stock).forEach(([k,v])=>{
-          newStock[k.replace('::'+editName,'::'+name)]=v;
-        });
-        S.stock=newStock;
-      }
-      S.products[idx]={name,price};
-    }
-    toast('Product updated');
-  } else {
-    if(S.products.find(p=>p.name.toLowerCase()===name.toLowerCase())){
-      toast('Product already exists','err');return;
-    }
-    S.products.push({name,price});
-    toast('Product added');
-  }
-  persist(); renderAll(); cancelProductEdit();
-}
-
-function editProduct(name){
-  const p=S.products.find(x=>x.name===name);
-  if(!p) return;
-  document.getElementById('pf-edit-name').value=name;
-  document.getElementById('pf-name').value=name;
-  document.getElementById('pf-price').value=p.price;
-  document.getElementById('prod-form-title').textContent='Editing: '+name;
-}
-
-function cancelProductEdit(){
-  document.getElementById('pf-edit-name').value='';
-  document.getElementById('pf-name').value='';
-  document.getElementById('pf-price').value='';
-  document.getElementById('prod-form-title').textContent='Add Product';
-}
-
-function delProduct(name){
-  const used=S.txns.some(t=>t.prod===name);
-  showModal(
-    'Delete Product',
-    `<div class="${used?'modal-warn':'modal-danger'}">
-    ${used?`<strong>${name}</strong> has transactions recorded. Deleting it will NOT delete those transactions, but it will no longer appear in dropdowns.`
-         :`Permanently delete <strong>${name}</strong> from your product list?`}
-    </div>`,
-    `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-     <button class="btn btn-red" style="padding:8px 16px;font-size:.73rem;" onclick="confirmDelProduct('${name}')">Delete</button>`
+function delDebtEntry(debtIdx,txnId){
+  const d=S.debts[debtIdx];if(!d) return;
+  const ei=(d.entries||[]).findIndex(e=>e.txnId===txnId);if(ei===-1) return;
+  const entry=d.entries[ei];
+  showModal('Delete Entry — '+d.cust,
+    `<div class="modal-danger">Remove <strong>${entry.prod}</strong> (${entry.qty} unit${entry.qty!==1?'s':''}) — ${N(entry.amount)}?
+    ${d.entries.length===1?'<br/><br/><strong>Only entry — entire debt record will be removed.</strong>':'<br/><br/>Debt will adjust automatically.'}</div>`,
+    `<button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+     <button class="btn" style="flex:1;background:var(--red);color:#fff" onclick="confirmDelDebtEntry(${debtIdx},'${txnId}')">Delete</button>`
   );
 }
-
-function confirmDelProduct(name){
-  const idx=S.products.findIndex(p=>p.name===name);
-  if(idx!==-1) S.products.splice(idx,1);
-  persist(); renderAll(); closeModal();
-  toast(name+' deleted','err');
+function confirmDelDebtEntry(debtIdx,txnId){
+  const d=S.debts[debtIdx];if(!d){closeModal();return;}
+  const ei=(d.entries||[]).findIndex(e=>e.txnId===txnId);if(ei===-1){closeModal();return;}
+  const entry=d.entries[ei];
+  S.txns=S.txns.filter(t=>t.id!==txnId);
+  d.owed=Math.max(0,d.owed-entry.amount);
+  d.entries.splice(ei,1);
+  if(!d.entries.length||d.owed<=0){S.debts.splice(debtIdx,1);persist();renderAll();closeModal();toast('Entry deleted','err');return;}
+  if(d.paid>=d.owed) d.status='cleared';
+  persist();renderAll();closeModal();toast('Entry deleted — debt adjusted to '+N(d.owed));
 }
 
-// ── DATA EXPORT / IMPORT ───────────────────────────────────────────────
-function exportJSON(){
-  const data=JSON.stringify(S,null,2);
-  const blob=new Blob([data],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='club-tracker-backup-'+today()+'.json';
-  a.click();
-  toast('Backup downloaded');
-}
+function renderDebts(){
+  // populate product select
+  const dprod=document.getElementById('d-prod');
+  if(dprod) dprod.innerHTML=S.products.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
 
-function importJSON(e){
-  const file=e.target.files[0];
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    showModal(
-      'Import Backup',
-      `<div class="modal-danger">&#x26A0; This will replace ALL current data with the backup file.<br/><br/>
-      File: <strong>${file.name}</strong><br/>
-      Make sure this is your intended backup.</div>`,
-      `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-       <button class="btn btn-acc" onclick="confirmImport('${encodeURIComponent(ev.target.result)}')">Yes, Import</button>`
-    );
-  };
-  reader.readAsText(file);
-  e.target.value='';
-}
+  const pd=S.debts.filter(d=>d.status==='pending');
+  document.getElementById('debt-stats').innerHTML=`
+    <div class="stat-cell"><div class="stat-lbl">Pending</div><div class="stat-val red">${pd.length}</div></div>
+    <div class="stat-cell"><div class="stat-lbl">Outstanding</div><div class="stat-val amb">${N(pd.reduce((a,d)=>a+(d.owed-d.paid),0))}</div></div>
+    <div class="stat-cell"><div class="stat-lbl">Total Debtors</div><div class="stat-val">${S.debts.length}</div></div>`;
 
-function confirmImport(encoded){
-  try{
-    const parsed=JSON.parse(decodeURIComponent(encoded));
-    S=parsed;
-    if(!S.products||!S.products.length) S.products=[...DEFAULT_PRODUCTS];
-    persist(); renderAll(); closeModal();
-    toast('Data imported successfully');
-  }catch(err){
-    closeModal();
-    toast('Invalid backup file','err');
-  }
-}
+  const tb=document.getElementById('debt-body');
+  if(!pd.length){tb.innerHTML=`<tr><td colspan="7" class="empty">No outstanding debts.</td></tr>`;return;}
+  tb.innerHTML=pd.map((d,ri)=>{
+    const i=S.debts.indexOf(d);
+    const bal=d.owed-d.paid;
+    return `<tr>
+      <td class="sans bold">${d.cust}</td>
+      <td>${d.date}</td>
+      <td class="sans">${d.prod}</td>
+      <td class="amber">${N(d.owed)}</td>
+      <td class="green">${N(d.paid)}</td>
+      <td class="red bold">${N(bal)}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-grn" onclick="markPaid(${i})">Pay</button>
+        <button class="btn btn-blue" onclick="editDebtRecord(${i})" style="margin-left:4px">Edit</button>
+        <button class="btn btn-red" onclick="delDebt(${i})" style="margin-left:4px">&#x2715;</button>
+      </td>
+    </tr>`;
+  }).join('');
 
-function nukeData(){
-  showModal(
-    'Wipe All Data',
-    `<div class="modal-danger">&#x26A0; This will permanently delete ALL transactions, debts, stock records, and product changes.<br/><br/>
-    You cannot undo this. Export a backup first if you want to keep your data.</div>`,
-    `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-     <button class="btn" style="background:var(--red);color:#fff;font-size:.73rem;padding:8px 16px;" onclick="confirmNuke()">Wipe Everything</button>`
-  );
-}
-
-function confirmNuke(){
-  S={txns:[],debts:[],stock:{},products:[...DEFAULT_PRODUCTS]};
-  persist(); renderAll(); closeModal();
-  toast('All data wiped','err');
-}
-
-// ── PDF EXPORT ─────────────────────────────────────────────────────────
-const PDF_CSS=`
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:#fff;color:#111;font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:32px;}
-  h1{font-family:'IBM Plex Mono',monospace;font-size:1.1rem;font-weight:600;margin-bottom:4px;}
-  .sub{font-size:.72rem;color:#666;margin-bottom:24px;}
-  .stat-row{display:grid;gap:1px;background:#ddd;border:1px solid #ddd;border-radius:6px;overflow:hidden;margin-bottom:20px;}
-  .stat-cell{background:#f7f7f7;padding:12px 14px;}
-  .stat-label{font-size:.6rem;color:#666;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
-  .stat-value{font-family:'IBM Plex Mono',monospace;font-size:.95rem;font-weight:600;color:#111;}
-  table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:.75rem;}
-  thead th{padding:8px 10px;text-align:left;font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#555;background:#eee;border-bottom:1px solid #ddd;}
-  tbody td{padding:8px 10px;border-bottom:1px solid #eee;font-family:'IBM Plex Mono',monospace;}
-  tbody td.sans{font-family:'IBM Plex Sans',sans-serif;}
-  tbody tr:last-child td{border-bottom:none;}
-  .section-title{font-family:'IBM Plex Mono',monospace;font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#666;margin:20px 0 10px;}
-  .prod-block{border:1px solid #ddd;border-radius:5px;overflow:hidden;margin-bottom:10px;}
-  .prod-head{display:flex;justify-content:space-between;padding:9px 14px;background:#eee;font-family:'IBM Plex Mono',monospace;font-size:.8rem;font-weight:600;}
-  .prod-body{display:grid;grid-template-columns:repeat(4,1fr);}
-  .prod-cell{padding:9px 14px;border-right:1px solid #eee;}
-  .prod-cell:last-child{border-right:none;}
-  .prod-cell-lbl{font-size:.58rem;color:#666;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
-  .prod-cell-val{font-family:'IBM Plex Mono',monospace;font-size:.8rem;font-weight:600;}
-  .debtor-card{border:1px solid #ddd;border-radius:5px;overflow:hidden;margin-bottom:10px;}
-  .debtor-head{display:flex;justify-content:space-between;padding:10px 14px;background:#eee;font-family:'IBM Plex Mono',monospace;font-size:.82rem;font-weight:600;}
-  .debtor-day-head{display:flex;justify-content:space-between;padding:7px 14px;background:#f7f7f7;font-size:.7rem;font-family:'IBM Plex Mono',monospace;border-bottom:1px solid #eee;}
-  .chip{display:inline-block;padding:2px 6px;border-radius:2px;font-size:.62rem;font-weight:600;font-family:'IBM Plex Mono',monospace;background:#eee;color:#333;}
-  .grand{display:flex;gap:24px;background:#f7f7f7;border:1px solid #ddd;border-radius:5px;padding:12px 16px;margin-bottom:16px;flex-wrap:wrap;}
-  .grand-item{display:flex;flex-direction:column;gap:3px;}
-  .grand-lbl{font-size:.58rem;color:#666;text-transform:uppercase;letter-spacing:.06em;}
-  .grand-val{font-family:'IBM Plex Mono',monospace;font-size:.9rem;font-weight:600;}
-  .sbar{height:3px;background:#ddd;border-radius:2px;margin-top:4px;width:64px;}
-  .sbar-fill{height:100%;border-radius:2px;background:#333;}
-  @media print{body{padding:16px;} @page{margin:1cm;}}
-`;
-
-function exportPDF(pageId){
-  const title = {
-    transactions:'Transactions',stock:'Stock',debts:'Debts',
-    debtors:'Debtor Breakdown',summary:'Summary'
-  }[pageId]||pageId;
-  const body = buildPDFBody(pageId);
-  const html = `<!DOCTYPE html><html><head>
-    <meta charset="UTF-8"/>
-    <title>Club Tracker — ${title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
-    <style>${PDF_CSS}</style>
-  </head><body>
-    <h1>CLUB TRACKER — ${title.toUpperCase()}</h1>
-    <div class="sub">Generated ${new Date().toLocaleString('en-NG')} &nbsp;·&nbsp; ${S.txns.length} total transactions</div>
-    ${body}
-    <script>window.onload=()=>window.print();<\/script>
-  </body></html>`;
-  const blob = new Blob([html], {type:'text/html'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url;
-  a.target = '_blank';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url), 10000);
-}
-
-function buildPDFBody(pageId){
-  const td = today();
-  if(pageId==='transactions'){
-    const rows = S.txns;
-    if(!rows.length) return '<p style="color:#666;font-size:.8rem">No transactions recorded.</p>';
-    return `<table>
-      <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Product</th><th>Qty</th><th>Unit</th><th>Total</th><th>Payment</th><th>Customer</th><th>Debt</th><th>By</th></tr></thead>
-      <tbody>${rows.map(t=>`<tr>
-        <td>${t.id}</td><td>${t.date}</td><td>${t.time||'—'}</td>
-        <td class="sans">${t.prod}</td><td>${t.qty}</td><td>₦${Math.round(t.price).toLocaleString()}</td>
-        <td>₦${Math.round(t.total).toLocaleString()}</td><td>${t.pay}</td>
-        <td class="sans">${t.cust}</td><td>${t.isDebt==='Yes'?'Yes':'—'}</td><td>${t.by}</td>
-      </tr>`).join('')}</tbody>
-    </table>
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:.75rem;color:#444;margin-top:8px">
-      Total revenue: ₦${Math.round(rows.reduce((a,t)=>a+t.total,0)).toLocaleString()} &nbsp;|&nbsp;
-      Cash: ₦${Math.round(rows.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0)).toLocaleString()} &nbsp;|&nbsp;
-      Transfer: ₦${Math.round(rows.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0)).toLocaleString()}
-    </div>`;
-  }
-
-  if(pageId==='stock'){
-    return `<table>
-      <thead><tr><th>Product</th><th>Unit Price</th><th>Opening (${td})</th><th>Sold</th><th>Remaining</th><th>Value</th><th>Status</th></tr></thead>
-      <tbody>${S.products.map(p=>{
-        const key=td+'::'+p.name;
-        const open=S.stock[key]!=null?S.stock[key]:0;
-        const sold=soldOfOnDate(p.name,td);
-        const rem=Math.max(0,open-sold);
-        const low=open>0&&rem<=Math.ceil(open*.15);
-        return `<tr>
-          <td class="sans">${p.name}</td><td>₦${p.price.toLocaleString()}</td>
-          <td>${open}</td><td>${sold}</td><td>${rem}</td>
-          <td>₦${Math.round(rem*p.price).toLocaleString()}</td>
-          <td>${low?'LOW':'OK'}</td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table>`;
-  }
-
-  if(pageId==='debts'){
-    const pd=S.debts.filter(d=>d.status==='pending');
-    const cl=S.debts.filter(d=>d.status==='cleared');
-    const owed=pd.reduce((a,d)=>a+(d.owed-d.paid),0);
-    if(!S.debts.length) return '<p style="color:#666;font-size:.8rem">No debts recorded.</p>';
-    return `<div class="grand">
-      <div class="grand-item"><div class="grand-lbl">Pending</div><div class="grand-val">${pd.length}</div></div>
-      <div class="grand-item"><div class="grand-lbl">Outstanding</div><div class="grand-val">₦${Math.round(owed).toLocaleString()}</div></div>
-      <div class="grand-item"><div class="grand-lbl">Cleared</div><div class="grand-val">${cl.length}</div></div>
-    </div>
-    <table>
-      <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Customer</th><th>Product</th><th>Owed</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
-      <tbody>${S.debts.map(d=>{
-        const bal=d.owed-d.paid;
-        return `<tr>
-          <td>${d.id}</td><td>${d.date}</td><td>${d.time||'—'}</td>
-          <td class="sans">${d.cust}</td><td class="sans">${d.prod}</td>
-          <td>₦${Math.round(d.owed).toLocaleString()}</td>
-          <td>₦${Math.round(d.paid).toLocaleString()}</td>
-          <td>₦${Math.round(bal).toLocaleString()}</td>
-          <td>${d.status}</td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table>`;
-  }
-
-  if(pageId==='debtors'){
-    const totalOwed=S.debts.reduce((a,d)=>a+d.owed,0);
-    const totalPaid=S.debts.reduce((a,d)=>a+d.paid,0);
-    if(!S.debts.length) return '<p style="color:#666;font-size:.8rem">No debtors on record.</p>';
-    return `<div class="grand">
-      <div class="grand-item"><div class="grand-lbl">Total Owed</div><div class="grand-val">₦${Math.round(totalOwed).toLocaleString()}</div></div>
-      <div class="grand-item"><div class="grand-lbl">Total Paid</div><div class="grand-val">₦${Math.round(totalPaid).toLocaleString()}</div></div>
-      <div class="grand-item"><div class="grand-lbl">Outstanding</div><div class="grand-val">₦${Math.round(totalOwed-totalPaid).toLocaleString()}</div></div>
-      <div class="grand-item"><div class="grand-lbl">Active Debtors</div><div class="grand-val">${S.debts.filter(d=>d.status==='pending').length}</div></div>
-    </div>
-    ${S.debts.map(d=>{
-      const bal=d.owed-d.paid;
-      const entries=d.entries||[{txnId:d.id,date:d.date,time:d.time||'—',prod:d.prod,qty:'—',amount:d.owed}];
-      const byDay={};
-      entries.forEach(e=>{if(!byDay[e.date])byDay[e.date]=[];byDay[e.date].push(e);});
-      const daysHtml=Object.entries(byDay).sort((a,b)=>b[0].localeCompare(a[0])).map(([date,ents])=>{
-        const dayTotal=ents.reduce((a,e)=>a+e.amount,0);
-        return `<div class="debtor-day-head">${date} <span>₦${Math.round(dayTotal).toLocaleString()}</span></div>
-        <table style="margin-bottom:0">
-          <thead><tr><th>Txn ID</th><th>Time</th><th>Product</th><th>Qty</th><th>Amount</th><th></th></tr></thead>
-          <tbody>${ents.map(e=>`<tr>
-            <td>${e.txnId}</td><td>${e.time||'—'}</td>
-            <td class="sans">${e.prod}</td><td>${e.qty}</td>
-            <td>₦${Math.round(e.amount).toLocaleString()}</td>
-          </tr>`).join('')}</tbody>
-        </table>`;
-      }).join('');
-      const payHtml=(d.payments||[]).length?`
-        <div style="padding:8px 14px;background:#f7f7f7;font-size:.68rem;font-family:'IBM Plex Mono',monospace">
-          Payments: ${(d.payments||[]).map(p=>`${p.date} ${p.time} — ₦${Math.round(p.amount).toLocaleString()} (${p.note})`).join(' · ')}
-        </div>`:'';
-      return `<div class="debtor-card">
-        <div class="debtor-head"><span>${d.cust}</span><span>${d.status==='cleared'?'CLEARED':'₦'+Math.round(bal).toLocaleString()+' owed'} · ${d.status}</span></div>
-        ${daysHtml}${payHtml}
-      </div>`;
-    }).join('')}`;
-  }
-
-  if(pageId==='summary'){
-    const now=new Date(), td2=today();
-    const wk=new Date(now); wk.setDate(now.getDate()-now.getDay()+1);
-    const wkS=wk.toISOString().slice(0,10);
-    const mo=td2.slice(0,7);
-    const periods=[
-      {label:'Today',    txns:S.txns.filter(t=>t.date===td2)},
-      {label:'This Week',txns:S.txns.filter(t=>t.date>=wkS)},
-      {label:'This Month',txns:S.txns.filter(t=>t.date.startsWith(mo))},
-      {label:'All Time', txns:S.txns},
-    ];
-    return periods.map(({label,txns})=>{
-      const cash=txns.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
-      const trans=txns.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
-      return `<div class="section-title">${label}</div>
-      <div class="grand" style="margin-bottom:10px">
-        <div class="grand-item"><div class="grand-lbl">Revenue</div><div class="grand-val">₦${Math.round(cash+trans).toLocaleString()}</div></div>
-        <div class="grand-item"><div class="grand-lbl">Cash</div><div class="grand-val">₦${Math.round(cash).toLocaleString()}</div></div>
-        <div class="grand-item"><div class="grand-lbl">Transfer</div><div class="grand-val">₦${Math.round(trans).toLocaleString()}</div></div>
+  // Debtor breakdown cards
+  document.getElementById('debtor-cards').innerHTML=S.debts.map((d,i)=>{
+    const bal=d.owed-d.paid;
+    const entries=d.entries||[{txnId:d.id,date:d.date,time:d.time||'—',prod:d.prod,qty:'—',amount:d.owed}];
+    const payments=d.payments||[];
+    const byDay={};
+    entries.forEach(e=>{if(!byDay[e.date])byDay[e.date]=[];byDay[e.date].push(e);});
+    const daysHtml=Object.entries(byDay).sort((a,b)=>b[0].localeCompare(a[0])).map(([date,ents])=>{
+      const dayTotal=ents.reduce((a,e)=>a+e.amount,0);
+      return `<div class="debtor-day-head"><span>${date}</span><span class="debtor-day-amt">${N(dayTotal)}</span></div>
+      <div style="overflow-x:auto"><table style="min-width:0;width:100%">
+        <thead><tr><th>Txn</th><th>Time</th><th>Product</th><th>Qty</th><th>Amount</th><th></th></tr></thead>
+        <tbody>${ents.map(e=>`<tr>
+          <td class="txnid">${e.txnId}</td><td>${e.time||'—'}</td>
+          <td class="sans">${e.prod}</td><td>${e.qty}</td>
+          <td class="amber">${N(e.amount)}</td>
+          <td><button class="btn btn-red" onclick="delDebtEntry(${i},'${e.txnId}')">&#x2715;</button></td>
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+    }).join('');
+    const payHtml=payments.length?`<div class="pay-log">
+      <div class="pay-log-lbl">Payment History</div>
+      ${payments.map(p=>`<div class="pay-entry">
+        <span class="pay-entry-meta">${p.date} ${p.time} · ${p.note}</span>
+        <span class="pay-entry-amt">+${N(p.amount)}</span>
+      </div>`).join('')}
+    </div>`:'';
+    return `<div class="debtor-card">
+      <div class="debtor-head" onclick="toggleDebtor(${i})">
+        <div class="debtor-name">${d.cust}</div>
+        <div class="debtor-meta">
+          <span class="debtor-bal">${N(bal)}</span>
+          <span class="chip chip-pending">pending</span>
+          <span class="debtor-toggle" id="dbt-${i}">&#x25BC;</span>
+        </div>
       </div>
-      ${S.products.map(p=>{
-        const pt=txns.filter(t=>t.prod===p.name);
-        const units=pt.reduce((a,t)=>a+t.qty,0);
-        const pc=pt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
-        const pt2=pt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
-        return `<div class="prod-block">
-          <div class="prod-head"><span>${p.name}</span><span>₦${Math.round(pc+pt2).toLocaleString()}</span></div>
-          <div class="prod-body">
-            <div class="prod-cell"><div class="prod-cell-lbl">Units</div><div class="prod-cell-val">${units}</div></div>
-            <div class="prod-cell"><div class="prod-cell-lbl">Cash</div><div class="prod-cell-val">₦${Math.round(pc).toLocaleString()}</div></div>
-            <div class="prod-cell"><div class="prod-cell-lbl">Transfer</div><div class="prod-cell-val">₦${Math.round(pt2).toLocaleString()}</div></div>
-            <div class="prod-cell"><div class="prod-cell-lbl">Total</div><div class="prod-cell-val">₦${Math.round(pc+pt2).toLocaleString()}</div></div>
-          </div>
-        </div>`;
-      }).join('')}`;
-    }).join('<hr style="border:none;border-top:1px solid #ddd;margin:20px 0"/>');
+      <div class="debtor-body" id="db-${i}">
+        ${daysHtml}${payHtml}
+        <div class="debtor-actions">
+          <button class="btn btn-grn" onclick="markPaid(${i})">Record Payment</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDebtor(i){
+  const b=document.getElementById('db-'+i);
+  const t=document.getElementById('dbt-'+i);
+  const open=b.classList.toggle('open');
+  t.innerHTML=open?'&#x25B2;':'&#x25BC;';
+}
+
+// ── STOCK ──────────────────────────────────────────────────────────────
+function getStockDate(){return document.getElementById('stock-date')?.value||today();}
+
+function getOpeningStock(prod,date){
+  const key=date+'::'+prod;
+  if(S.stock[key]!=null) return S.stock[key];
+  const keys=Object.keys(S.stock).filter(k=>k.endsWith('::'+prod)&&k.slice(0,10)<=date).sort();
+  if(!keys.length) return 0;
+  return S.stock[keys[keys.length-1]];
+}
+function soldOfOnDate(prod,date){
+  return S.txns.filter(t=>t.prod===prod&&t.date===date).reduce((a,t)=>a+t.qty,0);
+}
+
+function buildStockInputs(){
+  const d=getStockDate();
+  document.getElementById('stock-inputs').innerHTML=S.products.map(p=>{
+    const val=getOpeningStock(p.name,d);
+    const hasOwn=S.stock[d+'::'+p.name]!=null;
+    return `<div class="f-group">
+      <label class="f-lbl">${p.name}${!hasOwn?'<span style="color:var(--t3);margin-left:4px">(auto)</span>':''}</label>
+      <input type="number" id="si-${p.name.replace(/ /g,'_')}" class="f-inp" value="${val}" min="0"/>
+    </div>`;
+  }).join('');
+}
+
+function saveStock(){
+  const d=getStockDate();
+  const newVals={};
+  S.products.forEach(p=>{
+    const el=document.getElementById('si-'+p.name.replace(/ /g,'_'));
+    if(el) newVals[p.name]=parseInt(el.value)||0;
+  });
+  const hasExisting=S.products.some(p=>S.stock[d+'::'+p.name]!=null);
+  if(hasExisting){
+    const rows=S.products.map(p=>{
+      const cur=S.stock[d+'::'+p.name]!=null?S.stock[d+'::'+p.name]:getOpeningStock(p.name,d);
+      const nv=newVals[p.name];
+      return `<tr><td class="sans" style="padding:4px 8px;font-size:.72rem">${p.name}</td>
+        <td style="padding:4px 8px;font-family:var(--mono);font-size:.72rem">${cur}</td>
+        <td style="padding:4px 8px;font-family:var(--mono);font-size:.72rem">${nv}</td>
+        <td style="padding:4px 8px;font-family:var(--mono);font-size:.72rem;color:var(--green)">${cur+nv}</td></tr>`;
+    }).join('');
+    const nvEnc=encodeURIComponent(JSON.stringify(newVals));
+    showModal('Update Stock — '+d,
+      `<div class="modal-info" style="margin-bottom:8px">Stock exists for this date. How to apply?</div>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+        <thead><tr><th style="padding:4px 8px;text-align:left;font-size:.56rem;color:var(--t2);text-transform:uppercase">Product</th>
+        <th style="padding:4px 8px;text-align:left;font-size:.56rem;color:var(--t2);text-transform:uppercase">Current</th>
+        <th style="padding:4px 8px;text-align:left;font-size:.56rem;color:var(--t2);text-transform:uppercase">Entered</th>
+        <th style="padding:4px 8px;text-align:left;font-size:.56rem;color:var(--t2);text-transform:uppercase">If Added</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>`,
+      `<button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+       <button class="btn btn-ghost" style="flex:1" onclick="applyStock('overwrite','${d}','${nvEnc}')">Overwrite</button>
+       <button class="btn btn-acc" style="flex:1" onclick="applyStock('add','${d}','${nvEnc}')">Add</button>`
+    );
+  } else {
+    applyStock('overwrite',d,encodeURIComponent(JSON.stringify(newVals)));
   }
-  return '';
+}
+function applyStock(mode,d,nvEnc){
+  const nv=JSON.parse(decodeURIComponent(nvEnc));
+  S.products.forEach(p=>{
+    const key=d+'::'+p.name;
+    S.stock[key]=mode==='add'?(S.stock[key]!=null?S.stock[key]:getOpeningStock(p.name,d))+(nv[p.name]||0):(nv[p.name]||0);
+  });
+  persist();renderAll();closeModal();toast('Stock '+(mode==='add'?'added':'saved')+' for '+d);
 }
 
-// ── RENDER FUNCTIONS ───────────────────────────────────────────────────
-function renderSidebar(){
-  const all=S.txns;
-  const todayRev=all.filter(t=>t.date===today()).reduce((a,t)=>a+t.total,0);
-  const totalDebt=S.debts.filter(d=>d.status==='pending').reduce((a,d)=>a+(d.owed-d.paid),0);
-  document.getElementById('sidebar-kpi').innerHTML=`
-    <div class="kpi-row"><span class="kpi-lbl">Today</span><span class="kpi-val">${N(todayRev)}</span></div>
-    <div class="kpi-row"><span class="kpi-lbl">All Time</span><span class="kpi-val green">${N(all.reduce((a,t)=>a+t.total,0))}</span></div>
-    <div class="kpi-row"><span class="kpi-lbl">Outstanding</span><span class="kpi-val red">${N(totalDebt)}</span></div>
-    <div class="kpi-row"><span class="kpi-lbl">Txns</span><span class="kpi-val">${all.length}</span></div>`;
-}
-
-function renderDash(){
-  document.getElementById('dash-date').textContent=new Date().toLocaleDateString('en-NG',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  const tt=S.txns.filter(t=>t.date===today());
-  const cash=tt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
-  const trans=tt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
-  const pend=S.debts.filter(d=>d.status==='pending');
-  const allRev=S.txns.reduce((a,t)=>a+t.total,0);
-  document.getElementById('dash-stats').innerHTML=`
-    <div class="stat-cell"><div class="stat-label">Today Revenue</div><div class="stat-value acc">${N(cash+trans)}</div></div>
-    <div class="stat-cell"><div class="stat-label">Cash</div><div class="stat-value grn">${N(cash)}</div></div>
-    <div class="stat-cell"><div class="stat-label">Transfer</div><div class="stat-value blu">${N(trans)}</div></div>
-    <div class="stat-cell"><div class="stat-label">Pending Debts</div><div class="stat-value amb">${N(pend.reduce((a,d)=>a+(d.owed-d.paid),0))}</div></div>`;
-  document.getElementById('dash-ledgers').innerHTML=S.products.map(p=>buildLedger(p.name,tt)).join('');
-}
-
-function buildLedger(prod,txns){
-  const pt=txns.filter(t=>t.prod===prod);
-  const units=pt.reduce((a,t)=>a+t.qty,0);
-  const cash=pt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
-  const trans=pt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
-  return `<div class="prod-ledger">
-    <div class="pl-head"><div class="pl-name">${prod}</div><div class="pl-total">${N(cash+trans)}</div></div>
-    <div class="pl-body">
-      <div class="pl-cell"><div class="pl-cell-lbl">Units</div><div class="pl-cell-val">${units}</div></div>
-      <div class="pl-cell"><div class="pl-cell-lbl">Cash</div><div class="pl-cell-val" style="color:var(--green)">${N(cash)}</div></div>
-      <div class="pl-cell"><div class="pl-cell-lbl">Transfer</div><div class="pl-cell-val" style="color:var(--blue)">${N(trans)}</div></div>
-      <div class="pl-cell"><div class="pl-cell-lbl">Total</div><div class="pl-cell-val" style="color:var(--acc)">${N(cash+trans)}</div></div>
-    </div></div>`;
-}
-
-function renderTxnTable(){
-  rebuildProductSelects();
-  const rows=txnFilter();
-  const tb=document.getElementById('txn-body');
-  if(!rows.length){tb.innerHTML=`<tr><td colspan="12" class="empty-state">No transactions match the current filters.</td></tr>`;return;}
-  tb.innerHTML=rows.map(t=>`<tr>
-    <td class="txnid">${t.id}</td><td>${t.date}</td><td>${t.time||'—'}</td>
-    <td class="sans">${t.prod}</td><td>${t.qty}</td><td>${N(t.price)}</td>
-    <td class="mono-green">${N(t.total)}</td>
-    <td><span class="chip chip-${(t.pay||'').toLowerCase()}">${t.pay}</span></td>
-    <td class="sans">${t.cust}</td>
-    <td>${t.isDebt==='Yes'?'<span class="chip chip-debt">Debt</span>':'—'}</td>
-    <td>${t.by}</td>
-    <td style="white-space:nowrap">
-      <button class="btn btn-blue" onclick="editTxn('${t.id}')">Edit</button>
-      <button class="btn btn-red" onclick="delTxn('${t.id}')" style="margin-left:4px">&#x2715;</button>
-    </td>
-  </tr>`).join('');
-}
-
-function renderStock(){
-  buildStockInputs();
+function renderStockTable(){
   const d=getStockDate();
   document.getElementById('stock-body').innerHTML=S.products.map(p=>{
     const open=getOpeningStock(p.name,d);
@@ -1492,598 +1421,389 @@ function renderStock(){
     const low=open>0&&rem<=Math.ceil(open*.15);
     const col=low?'var(--red)':pct<.4?'var(--amber)':'var(--green)';
     return `<tr>
-      <td class="sans" style="font-weight:600">${p.name}</td><td>${N(p.price)}</td>
-      <td>${open}</td><td>${sold}</td>
-      <td><span style="font-weight:600">${rem}</span>
+      <td class="sans bold">${p.name}</td>
+      <td>${N(p.price)}</td><td>${open}</td><td>${sold}</td>
+      <td><span style="font-weight:600;color:${col}">${rem}</span>
         <div class="sbar"><div class="sbar-fill" style="width:${Math.round(pct*100)}%;background:${col}"></div></div>
       </td>
-      <td class="mono-green">${N(val)}</td>
+      <td class="green">${N(val)}</td>
       <td><span class="chip ${low?'chip-low':'chip-ok'}">${low?'LOW':'OK'}</span></td>
     </tr>`;
   }).join('');
 }
 
-function renderDebts(){
-  const pd=S.debts.filter(d=>d.status==='pending');
-  document.getElementById('debt-stats').innerHTML=`
-    <div class="stat-cell"><div class="stat-label">Pending</div><div class="stat-value red">${pd.length}</div></div>
-    <div class="stat-cell"><div class="stat-label">Outstanding</div><div class="stat-value amb">${N(pd.reduce((a,d)=>a+(d.owed-d.paid),0))}</div></div>
-    <div class="stat-cell"><div class="stat-label">Total Debtors</div><div class="stat-value grn">${S.debts.length}</div></div>`;
-  const tb=document.getElementById('debt-body');
-  if(!pd.length){tb.innerHTML=`<tr><td colspan="10" class="empty-state">No outstanding debts.</td></tr>`;return;}
-  tb.innerHTML=pd.map((d,i)=>{
-    const realIdx=S.debts.indexOf(d);
-    const bal=d.owed-d.paid;
-    return `<tr>
-      <td class="txnid">${d.id}</td><td>${d.date}</td><td>${d.time||'—'}</td>
-      <td class="sans">${d.cust}</td><td class="sans">${d.prod}</td>
-      <td>${N(d.owed)}</td><td class="mono-green">${N(d.paid)}</td>
-      <td style="color:var(--red);font-weight:600">${N(bal)}</td>
-      <td><span class="chip chip-pending">Pending</span></td>
-      <td style="white-space:nowrap">
-        <button class="btn btn-grn" onclick="markPaid(${realIdx})">Pay</button>
-        <button class="btn btn-blue" onclick="editDebtRecord(${realIdx})" style="margin-left:4px">Edit</button>
-        <button class="btn btn-red" onclick="delDebt(${realIdx})" style="margin-left:4px">&#x2715;</button>
-      </td>
-    </tr>`;
-  }).join('');
+// ── SUMMARY ────────────────────────────────────────────────────────────
+let curRange='day';
+function setRange(r,el){
+  curRange=r;
+  document.querySelectorAll('.dr-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('custom-range').style.display=r==='custom'?'flex':'none';
+  renderSummary();
 }
-
-function renderDebtors(){
-  const totalOwed=S.debts.reduce((a,d)=>a+d.owed,0);
-  const totalPaid=S.debts.reduce((a,d)=>a+d.paid,0);
-  const pending=S.debts.filter(d=>d.status==='pending').length;
-  document.getElementById('debtor-grand').innerHTML=`
-    <div class="dg-item"><div class="dg-lbl">Total Ever Owed</div><div class="dg-val" style="color:var(--amber)">${N(totalOwed)}</div></div>
-    <div class="dg-item"><div class="dg-lbl">Total Paid</div><div class="dg-val" style="color:var(--green)">${N(totalPaid)}</div></div>
-    <div class="dg-item"><div class="dg-lbl">Outstanding</div><div class="dg-val" style="color:var(--red)">${N(totalOwed-totalPaid)}</div></div>
-    <div class="dg-item"><div class="dg-lbl">Active Debtors</div><div class="dg-val" style="color:var(--acc)">${pending}</div></div>`;
-  if(!S.debts.length){
-    document.getElementById('debtor-cards').innerHTML=`<div class="empty-state" style="padding:36px 0">No debtors on record.</div>`;
-    return;
+function getRangeTxns(){
+  const td=today();
+  const now=new Date();
+  const wk=new Date(now);wk.setDate(now.getDate()-now.getDay()+1);
+  const wkS=wk.toISOString().slice(0,10);
+  const mo=td.slice(0,7);
+  if(curRange==='day') return S.txns.filter(t=>t.date===td);
+  if(curRange==='week') return S.txns.filter(t=>t.date>=wkS);
+  if(curRange==='month') return S.txns.filter(t=>t.date.startsWith(mo));
+  if(curRange==='custom'){
+    const from=document.getElementById('dr-from')?.value;
+    const to=document.getElementById('dr-to')?.value;
+    return S.txns.filter(t=>(!from||t.date>=from)&&(!to||t.date<=to));
   }
-  document.getElementById('debtor-cards').innerHTML=S.debts.map((d,i)=>{
-    const bal=d.owed-d.paid;
-    const entries=d.entries||[{txnId:d.id,date:d.date,time:d.time||'—',prod:d.prod,qty:'—',amount:d.owed}];
-    const payments=d.payments||[];
-    const byDay={};
-    entries.forEach(e=>{if(!byDay[e.date])byDay[e.date]=[];byDay[e.date].push(e);});
-    const daysHtml=Object.entries(byDay).sort((a,b)=>b[0].localeCompare(a[0])).map(([date,ents])=>{
-      const dayTotal=ents.reduce((a,e)=>a+e.amount,0);
-      return `<div class="debtor-day">
-        <div class="debtor-day-head">
-          <span class="debtor-day-date">${date}</span>
-          <span class="debtor-day-total">${N(dayTotal)}</span>
-        </div>
-        <div class="debtor-entries"><table>
-          <thead><tr><th>Txn ID</th><th>Time</th><th>Product</th><th>Qty</th><th>Amount</th></tr></thead>
-          <tbody>${ents.map(e=>`<tr>
-            <td class="txnid">${e.txnId}</td><td>${e.time||'—'}</td>
-            <td class="sans">${e.prod}</td><td>${e.qty}</td>
-            <td style="color:var(--amber)">${N(e.amount)}</td>
-            <td><button class="btn btn-red" onclick="delDebtEntry(${i},'${e.txnId}')" title="Delete this entry">&#x2715;</button></td>
-          </tr>`).join('')}</tbody>
-        </table></div>
-      </div>`;
-    }).join('');
-    const payHtml=payments.length?`<div class="pay-log">
-      <div class="pay-log-title">Payment History</div>
-      ${payments.map(p=>`<div class="pay-entry">
-        <span class="pay-entry-meta">${p.date}&nbsp;&nbsp;${p.time}&nbsp;&nbsp;&middot;&nbsp;&nbsp;${p.note}</span>
-        <span class="pay-entry-amt">+${N(p.amount)}</span>
-      </div>`).join('')}
-    </div>`:'';
-    return `<div class="debtor-card">
-      <div class="debtor-head" onclick="toggleDebtor(${i})">
-        <div class="debtor-name">${d.cust}</div>
-        <div class="debtor-meta">
-          <span class="debtor-owed ${d.status==='cleared'?'cleared':''}">${d.status==='cleared'?'CLEARED':N(bal)+' owed'}</span>
-          <span class="chip chip-${d.status}">${d.status}</span>
-          <span class="debtor-toggle" id="dbt-${i}">&#x25BC;</span>
-        </div>
-      </div>
-      <div class="debtor-body" id="db-${i}">
-        ${daysHtml}${payHtml}
-        ${d.status==='pending'?`<div class="debtor-actions"><button class="btn btn-grn" onclick="markPaid(${i})">Record Payment</button></div>`:''}
-      </div>
-    </div>`;
-  }).join('');
+  return S.txns;
 }
 
-
-function delDebtEntry(debtIdx, txnId){
-  const d = S.debts[debtIdx];
-  if(!d) return;
-  const ei = (d.entries||[]).findIndex(e=>e.txnId===txnId);
-  if(ei===-1) return;
-  const entry = d.entries[ei];
-
-  showModal(
-    'Delete Entry — '+d.cust,
-    `<div class="modal-danger">
-      Remove <strong>${entry.prod}</strong> (${entry.qty} unit${entry.qty!==1?'s':''}) — ${Nraw(entry.amount)} from ${d.cust}'s debt?<br/><br/>
-      &#x26A0; The linked transaction will also be deleted so stock stays accurate.<br/><br/>
-      ${d.entries.length===1?'<strong>This is the only entry — the entire debt record will be removed.</strong>':'Remaining debt will adjust automatically.'}
-    </div>`,
-    `<button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-     <button class="btn" style="background:var(--red);color:#fff" onclick="confirmDelDebtEntry(${debtIdx},'${txnId}')">Delete Entry</button>`
-  );
-}
-
-function confirmDelDebtEntry(debtIdx, txnId){
-  const d = S.debts[debtIdx];
-  if(!d) { closeModal(); return; }
-  const ei = (d.entries||[]).findIndex(e=>e.txnId===txnId);
-  if(ei===-1) { closeModal(); return; }
-  const entry = d.entries[ei];
-
-  // Remove linked transaction (affects stock)
-  S.txns = S.txns.filter(t=>t.id!==txnId);
-
-  // Adjust debt owed
-  d.owed = Math.max(0, d.owed - entry.amount);
-  d.entries.splice(ei, 1);
-
-  // If no entries left or owed is 0, remove the whole debt
-  if(!d.entries.length || d.owed <= 0){
-    S.debts.splice(debtIdx, 1);
-    persist(); renderAll(); closeModal();
-    toast('Entry deleted — debt record removed','err');
-    return;
-  }
-
-  // Re-check status
-  if(d.paid >= d.owed) d.status = 'cleared';
-
-  persist(); renderAll(); closeModal();
-  toast('Entry deleted — debt adjusted to '+Nraw(d.owed));
-}
-
-function toggleDebtor(i){
-  const body=document.getElementById('db-'+i);
-  const tog=document.getElementById('dbt-'+i);
-  const open=body.classList.toggle('open');
-  tog.innerHTML=open?'&#x25B2;':'&#x25BC;';
-}
-
-let curPeriod='day';
-function setPeriod(p,el){
-  curPeriod=p;
-  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active'); renderSummary();
-}
-// Supplier groups config
-const SUPPLIER_GROUPS=[
-  {name:'Suntory',    products:['Lucozade 25cl','Lucozade 45cl','Ribena']},
-  {name:'Water & Soft Drinks', products:['Water 50cl','Soft Drink 50cl']},
-];
-
-function getDebtStatsForProduct(prodName, periodDates){
+function getDebtStats(prod,periodDates){
   let units=0,owed=0,paid=0;
   S.debts.filter(d=>d.status==='pending').forEach(d=>{
-    const ents=(d.entries||[]).filter(e=>e.prod===prodName&&(curPeriod==='all'||periodDates.has(e.date)));
+    const ents=(d.entries||[]).filter(e=>e.prod===prod&&(curRange==='all'||periodDates.has(e.date)));
     if(!ents.length) return;
-    const entOwed=ents.reduce((a,e)=>a+e.amount,0);
-    const entQty=ents.reduce((a,e)=>a+(parseInt(e.qty)||0),0);
-    const paidProp=d.owed>0?(d.paid/d.owed):0;
-    units+=entQty; owed+=entOwed; paid+=entOwed*paidProp;
+    const eo=ents.reduce((a,e)=>a+e.amount,0);
+    const eq=ents.reduce((a,e)=>a+(parseInt(e.qty)||0),0);
+    const pr=d.owed>0?d.paid/d.owed:0;
+    units+=eq;owed+=eo;paid+=eo*pr;
   });
   return {units,owed,paid,bal:owed-paid};
 }
 
-function buildGroupHTML(group, txns, periodDates, idx){
-  // only include products that exist in S.products
-  const prods=group.products.filter(p=>S.products.find(x=>x.name===p));
-  if(!prods.length) return '';
-
-  const gtxns=txns.filter(t=>prods.includes(t.prod));
-  const gCash=gtxns.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
-  const gTrans=gtxns.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
-  const gDebt=prods.reduce((a,p)=>{const d=getDebtStatsForProduct(p,periodDates);return a+d.bal;},0);
-  const gTotal=gCash+gTrans;
-
-  // per-product ledger rows
-  const ledgers=prods.map(p=>buildLedger(p,txns)).join('');
-
-  // debt table for this group
-  const debtRows=prods.map(p=>({name:p,...getDebtStatsForProduct(p,periodDates)})).filter(r=>r.owed>0);
-  const debtHTML=debtRows.length
-    ?'<div class="sup-debt-head">Debt Breakdown</div>'
-     +'<div class="tbl-wrap"><table>'
-     +'<thead><tr><th>Product</th><th>Units on Debt</th><th>Owed</th><th>Paid</th><th>Outstanding</th></tr></thead>'
-     +'<tbody>'
-     +debtRows.map(r=>'<tr>'
-       +'<td class="sans" style="font-weight:600">'+r.name+'</td>'
-       +'<td>'+r.units+'</td>'
-       +'<td style="color:var(--amber)">'+Nraw(r.owed)+'</td>'
-       +'<td style="color:var(--green)">'+Nraw(r.paid)+'</td>'
-       +'<td style="color:'+(r.bal>0?'var(--red)':'var(--green)')+';font-weight:600">'+Nraw(r.bal)+'</td>'
-       +'</tr>').join('')
-     +'</tbody></table></div>'
-    :'';
-
-  return '<div class="sup-group" id="sup-group-'+idx+'">'
-    +'<div class="sup-group-head">'
-      +'<span class="sup-group-name">'+group.name+'</span>'
-      +'<div style="display:flex;gap:10px;align-items:center">'
-        +'<span class="sup-group-total">'+Nraw(gTotal)+'</span>'
-        +'<button class="btn btn-pdf" onclick="exportGroupPDF('+idx+')">&#x2B07; Print</button>'
-      +'</div>'
-    +'</div>'
-    +'<div class="sup-group-body">'
-      +'<div class="sup-group-totals">'
-        +'<div class="stat-cell"><div class="stat-label">Revenue</div><div class="stat-value acc">'+Nraw(gTotal)+'</div></div>'
-        +'<div class="stat-cell"><div class="stat-label">Cash</div><div class="stat-value grn">'+Nraw(gCash)+'</div></div>'
-        +'<div class="stat-cell"><div class="stat-label">Transfer</div><div class="stat-value blu">'+Nraw(gTrans)+'</div></div>'
-        +'<div class="stat-cell"><div class="stat-label">Debt Outstanding</div><div class="stat-value '+(gDebt>0?'red':'grn')+'">'+Nraw(gDebt)+'</div></div>'
-      +'</div>'
-      +ledgers
-      +debtHTML
-    +'</div>'
-    +'</div>';
-}
-
 function renderSummary(){
-  const now=new Date(),td=today();
-  const wk=new Date(now); wk.setDate(now.getDate()-now.getDay()+1);
-  const wkS=wk.toISOString().slice(0,10);
-  const mo=td.slice(0,7);
-  let txns=S.txns;
-  if(curPeriod==='day') txns=txns.filter(t=>t.date===td);
-  else if(curPeriod==='week') txns=txns.filter(t=>t.date>=wkS);
-  else if(curPeriod==='month') txns=txns.filter(t=>t.date.startsWith(mo));
+  const txns=getRangeTxns();
   const periodDates=new Set(txns.map(t=>t.date));
   const cash=txns.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
   const trans=txns.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
   const totalDebt=S.debts.filter(d=>d.status==='pending').reduce((a,d)=>a+(d.owed-d.paid),0);
-  document.getElementById('sum-stats').innerHTML=
-    '<div class="stat-cell"><div class="stat-label">Total Revenue</div><div class="stat-value acc">'+Nraw(cash+trans)+'</div></div>'
-    +'<div class="stat-cell"><div class="stat-label">Cash</div><div class="stat-value grn">'+Nraw(cash)+'</div></div>'
-    +'<div class="stat-cell"><div class="stat-label">Transfer</div><div class="stat-value blu">'+Nraw(trans)+'</div></div>'
-    +'<div class="stat-cell"><div class="stat-label">Debt Outstanding</div><div class="stat-value red">'+Nraw(totalDebt)+'</div></div>';
+  document.getElementById('sum-stats').innerHTML=`
+    <div class="stat-cell"><div class="stat-lbl">Revenue</div><div class="stat-val acc">${N(cash+trans)}</div></div>
+    <div class="stat-cell"><div class="stat-lbl">Cash</div><div class="stat-val grn">${N(cash)}</div></div>
+    <div class="stat-cell"><div class="stat-lbl">Transfer</div><div class="stat-val blu">${N(trans)}</div></div>
+    <div class="stat-cell"><div class="stat-lbl">Debt</div><div class="stat-val red">${N(totalDebt)}</div></div>`;
 
-  // Find products not in any group and make an "Other" group
+  const grouped=[...SUPPLIER_GROUPS];
   const groupedProds=SUPPLIER_GROUPS.flatMap(g=>g.products);
   const ungrouped=S.products.map(p=>p.name).filter(n=>!groupedProds.includes(n));
-  const allGroups=[...SUPPLIER_GROUPS];
-  if(ungrouped.length) allGroups.push({name:'Other',products:ungrouped});
+  if(ungrouped.length) grouped.push({name:'Other',products:ungrouped});
 
-  document.getElementById('sum-groups').innerHTML=allGroups.map((g,i)=>buildGroupHTML(g,txns,periodDates,i)).join('');
-}
-
-function exportGroupPDF(idx){
-  const now=new Date(),td=today();
-  const wk=new Date(now); wk.setDate(now.getDate()-now.getDay()+1);
-  const wkS=wk.toISOString().slice(0,10);
-  const mo=td.slice(0,7);
-  let txns=S.txns;
-  if(curPeriod==='day') txns=txns.filter(t=>t.date===td);
-  else if(curPeriod==='week') txns=txns.filter(t=>t.date>=wkS);
-  else if(curPeriod==='month') txns=txns.filter(t=>t.date.startsWith(mo));
-  const periodDates=new Set(txns.map(t=>t.date));
-
-  const allGroups=[...SUPPLIER_GROUPS];
-  const groupedProds=SUPPLIER_GROUPS.flatMap(g=>g.products);
-  const ungrouped=S.products.map(p=>p.name).filter(n=>!groupedProds.includes(n));
-  if(ungrouped.length) allGroups.push({name:'Other',products:ungrouped});
-
-  const group=allGroups[idx];
-  const prods=group.products.filter(p=>S.products.find(x=>x.name===p));
-  const gtxns=txns.filter(t=>prods.includes(t.prod));
-  const gCash=gtxns.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
-  const gTrans=gtxns.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
-
-  const periodLabel={'day':'Today','week':'This Week','month':'This Month','all':'All Time'}[curPeriod]||'';
-
-  const prodRows=prods.map(p=>{
-    const pt=gtxns.filter(t=>t.prod===p);
-    const units=pt.reduce((a,t)=>a+t.qty,0);
-    const pc=pt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
-    const pt2=pt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
-    const ds=getDebtStatsForProduct(p,periodDates);
-    return {name:p,units,cash:pc,trans:pt2,total:pc+pt2,debt:ds};
-  });
-
-  const debtRows=prodRows.filter(r=>r.debt.owed>0);
-
-  const html='<!DOCTYPE html><html><head>'
-    +'<meta charset="UTF-8"/>'
-    +'<title>'+group.name+' — '+periodLabel+'</title>'
-    +'<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>'
-    +'<style>'+PDF_CSS+'</style>'
-    +'</head><body>'
-    +'<h1>'+group.name.toUpperCase()+'</h1>'
-    +'<div class="sub">Period: '+periodLabel+' &nbsp;·&nbsp; Generated '+new Date().toLocaleString('en-NG')+'</div>'
-
-    // Grand totals
-    +'<div class="grand">'
-      +'<div class="grand-item"><div class="grand-lbl">Total Revenue</div><div class="grand-val">'+Nraw(gCash+gTrans)+'</div></div>'
-      +'<div class="grand-item"><div class="grand-lbl">Cash</div><div class="grand-val" style="color:#1a8a55">'+Nraw(gCash)+'</div></div>'
-      +'<div class="grand-item"><div class="grand-lbl">Transfer</div><div class="grand-val" style="color:#2255cc">'+Nraw(gTrans)+'</div></div>'
-    +'</div>'
-
-    // Per-product breakdown
-    +'<div class="section-title">Sales by Product</div>'
-    +prodRows.map(r=>'<div class="prod-block">'
-      +'<div class="prod-head"><span>'+r.name+'</span><span>'+Nraw(r.total)+'</span></div>'
-      +'<div class="prod-body">'
-        +'<div class="prod-cell"><div class="prod-cell-lbl">Units Sold</div><div class="prod-cell-val">'+r.units+'</div></div>'
-        +'<div class="prod-cell"><div class="prod-cell-lbl">Cash</div><div class="prod-cell-val">'+Nraw(r.cash)+'</div></div>'
-        +'<div class="prod-cell"><div class="prod-cell-lbl">Transfer</div><div class="prod-cell-val">'+Nraw(r.trans)+'</div></div>'
-        +'<div class="prod-cell"><div class="prod-cell-lbl">Total</div><div class="prod-cell-val">'+Nraw(r.total)+'</div></div>'
-      +'</div>'
-    +'</div>').join('')
-
-    // Debt section
-    +(debtRows.length
-      ?'<div class="section-title" style="margin-top:24px">Debt Breakdown</div>'
-       +'<table>'
-       +'<thead><tr><th>Product</th><th>Units on Debt</th><th>Owed</th><th>Paid</th><th>Outstanding</th></tr></thead>'
-       +'<tbody>'
-       +debtRows.map(r=>'<tr>'
-         +'<td class="sans">'+r.name+'</td>'
-         +'<td>'+r.debt.units+'</td>'
-         +'<td>'+Nraw(r.debt.owed)+'</td>'
-         +'<td>'+Nraw(r.debt.paid)+'</td>'
-         +'<td style="font-weight:600">'+Nraw(r.debt.bal)+'</td>'
-       +'</tr>').join('')
-       +'<tr><td style="font-weight:600">TOTAL</td><td></td>'
-         +'<td>'+Nraw(debtRows.reduce((a,r)=>a+r.debt.owed,0))+'</td>'
-         +'<td>'+Nraw(debtRows.reduce((a,r)=>a+r.debt.paid,0))+'</td>'
-         +'<td style="font-weight:600">'+Nraw(debtRows.reduce((a,r)=>a+r.debt.bal,0))+'</td>'
-       +'</tr>'
-       +'</tbody></table>'
-      :'<div style="margin-top:16px;font-size:.78rem;color:#666">No outstanding debts for this period.</div>')
-
-    +'<script>window.onload=()=>window.print();<\/script>'
-    +'</body></html>';
-
-  const blob=new Blob([html],{type:'text/html'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url; a.target='_blank';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url),10000);
-}
-
-function renderProducts(){
-  rebuildProductSelects();
-  document.getElementById('prod-list').innerHTML=S.products.map(p=>`
-    <div class="prod-row">
-      <div class="prod-row-info">
-        <div class="prod-row-name">${p.name}</div>
-        <div class="prod-row-price">${N(p.price)} per unit</div>
+  document.getElementById('sum-groups').innerHTML=grouped.map((g,gi)=>{
+    const prods=g.products.filter(p=>S.products.find(x=>x.name===p));
+    if(!prods.length) return '';
+    const gt=txns.filter(t=>prods.includes(t.prod));
+    const gc=gt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
+    const gtr=gt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+    const gDebt=prods.reduce((a,p)=>{const d=getDebtStats(p,periodDates);return a+d.bal;},0);
+    const debtProds=prods.map(p=>({name:p,...getDebtStats(p,periodDates)})).filter(r=>r.owed>0);
+    return `<div class="sup-group">
+      <div class="sup-head">
+        <span class="sup-name">${g.name}</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="sup-total">${N(gc+gtr)}</span>
+          <button class="btn-pdf" onclick="exportGroupPDF(${gi})" style="font-size:.65rem;padding:5px 10px;border:1px solid rgba(232,255,71,.25);color:var(--acc);border-radius:4px;background:none;cursor:pointer">&#x2B07; Print</button>
+        </div>
       </div>
-      <div class="prod-row-actions">
-        <button class="btn btn-blue btn-sm" onclick="editProduct('${p.name.replace(/'/g,"\\'")}')">Edit</button>
-        <button class="btn btn-red btn-sm" onclick="delProduct('${p.name.replace(/'/g,"\\'")}')">&#x2715;</button>
+      <div class="sup-totals">
+        <div class="stat-cell"><div class="stat-lbl">Revenue</div><div class="stat-val acc">${N(gc+gtr)}</div></div>
+        <div class="stat-cell"><div class="stat-lbl">Cash</div><div class="stat-val grn">${N(gc)}</div></div>
+        <div class="stat-cell"><div class="stat-lbl">Transfer</div><div class="stat-val blu">${N(gtr)}</div></div>
+        <div class="stat-cell"><div class="stat-lbl">Debt</div><div class="stat-val ${gDebt>0?'red':'grn'}">${N(gDebt)}</div></div>
       </div>
-    </div>`).join('');
+      <div class="sup-body">${prods.map(p=>buildLedger(p,gt)).join('')}</div>
+      ${debtProds.length?`<div style="padding:0 0 10px">
+        <div style="font-family:var(--mono);font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);padding:10px 12px 6px">Debt Breakdown</div>
+        <div class="tbl-wrap" style="margin:0 12px">
+          <table><thead><tr><th>Product</th><th>Units</th><th>Owed</th><th>Paid</th><th>Outstanding</th></tr></thead>
+          <tbody>${debtProds.map(r=>`<tr>
+            <td class="sans bold">${r.name}</td><td>${r.units}</td>
+            <td class="amber">${N(r.owed)}</td><td class="green">${N(r.paid)}</td>
+            <td class="red bold">${N(r.bal)}</td>
+          </tr>`).join('')}</tbody></table>
+        </div>
+      </div>`:''}
+    </div>`;
+  }).join('');
 }
-
-function renderDataPage(){
-  document.getElementById('data-summary').innerHTML=`
-    Transactions: <span style="color:var(--acc)">${S.txns.length}</span><br/>
-    Debt records: <span style="color:var(--acc)">${S.debts.length}</span><br/>
-    Products: <span style="color:var(--acc)">${S.products.length}</span><br/>
-    Stock snapshots: <span style="color:var(--acc)">${Object.keys(S.stock).length}</span><br/>
-    Last transaction: <span style="color:var(--acc)">${S.txns.length?S.txns[0].date+' at '+S.txns[0].time:'—'}</span>`;
-}
-
-function renderAll(){
-  rebuildProductSelects();
-  if(document.getElementById("page-calendar").classList.contains("active")) renderCalendar();
-  renderSidebar();
-  renderDash();
-  renderTxnTable();
-  renderStock();
-  renderDebts();
-  renderDebtors();
-  renderSummary();
-  renderProducts();
-  renderDataPage();
-}
-
-// ── INIT ───────────────────────────────────────────────────────────────
-document.getElementById('f-date').value=today();
-document.getElementById('stock-date').value=today();
-document.getElementById('d-date').value=today();
-goTo('dashboard');
 
 // ── CALENDAR ───────────────────────────────────────────────────────────
 let calYear=new Date().getFullYear();
-let calMonth=new Date().getMonth(); // 0-indexed
+let calMonth=new Date().getMonth();
 let calSelected=null;
 
-function calShift(dir){
-  calMonth+=dir;
+function calShift(d){
+  calMonth+=d;
   if(calMonth>11){calMonth=0;calYear++;}
   if(calMonth<0){calMonth=11;calYear--;}
   renderCalendar();
 }
-function calGoToday(){
-  calYear=new Date().getFullYear();
-  calMonth=new Date().getMonth();
-  renderCalendar();
-}
+function calGoToday(){calYear=new Date().getFullYear();calMonth=new Date().getMonth();renderCalendar();}
 
 function renderCalendar(){
   const td=today();
-  const monthStr=String(calMonth+1).padStart(2,'0');
-  const prefix=calYear+'-'+monthStr;
-  const label=new Date(calYear,calMonth,1).toLocaleDateString('en-NG',{month:'long',year:'numeric'});
-  document.getElementById('cal-month-label').textContent=label;
+  const mp=String(calMonth+1).padStart(2,'0');
+  const prefix=calYear+'-'+mp;
+  document.getElementById('cal-month').textContent=new Date(calYear,calMonth,1).toLocaleDateString('en-NG',{month:'long',year:'numeric'});
 
-  // Build per-day stats
   const dayStats={};
   S.txns.filter(t=>t.date.startsWith(prefix)).forEach(t=>{
-    if(!dayStats[t.date]) dayStats[t.date]={rev:0,cash:0,trans:0,txns:0,debtAmt:0};
-    dayStats[t.date].rev+=t.total;
-    dayStats[t.date].txns++;
-    if(t.pay==='Cash') dayStats[t.date].cash+=t.total;
-    else dayStats[t.date].trans+=t.total;
+    if(!dayStats[t.date])dayStats[t.date]={rev:0,txns:0,debtAmt:0};
+    dayStats[t.date].rev+=t.total;dayStats[t.date].txns++;
   });
-  // Mark days with pending debt entries
   S.debts.filter(d=>d.status==='pending').forEach(d=>{
     (d.entries||[]).filter(e=>e.date.startsWith(prefix)).forEach(e=>{
-      if(!dayStats[e.date]) dayStats[e.date]={rev:0,cash:0,trans:0,txns:0,debtAmt:0};
+      if(!dayStats[e.date])dayStats[e.date]={rev:0,txns:0,debtAmt:0};
       dayStats[e.date].debtAmt+=e.amount;
     });
   });
-
   const maxRev=Math.max(...Object.values(dayStats).map(d=>d.rev),1);
-
-  // Calendar grid
-  const firstDay=new Date(calYear,calMonth,1);
   const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
-  // Monday=0 offset
-  let startOffset=(firstDay.getDay()+6)%7;
-
+  const startOffset=(new Date(calYear,calMonth,1).getDay()+6)%7;
   let cells='';
-  // Empty cells before
   for(let i=0;i<startOffset;i++) cells+='<div class="cal-cell empty"></div>';
-
   for(let d=1;d<=daysInMonth;d++){
-    const dateStr=prefix+'-'+String(d).padStart(2,'0');
-    const ds=dayStats[dateStr];
-    const isToday=dateStr===td;
-    const isSel=dateStr===calSelected;
-    const hasDebt=ds&&ds.debtAmt>0;
+    const ds=prefix+'-'+String(d).padStart(2,'0');
+    const st=dayStats[ds];
+    const isToday=ds===td,isSel=ds===calSelected,hasDebt=st&&st.debtAmt>0;
     let bg='var(--s1)';
-    let barW=0;
-    if(ds&&ds.rev>0){
-      const pct=ds.rev/maxRev;
-      if(pct<0.33) bg='#1a4a2e';
-      else if(pct<0.66) bg='#1a6e40';
-      else bg='rgba(45,206,137,.25)';
-      barW=Math.round(pct*100);
-    }
-    cells+=`<div class="cal-cell${isToday?' today':''}${isSel?' selected':''}${hasDebt?' has-debt':''}"
-      style="background:${bg}" onclick="selectCalDay('${dateStr}')">
+    if(st&&st.rev>0){const pct=st.rev/maxRev;bg=pct<.33?'#1a4a2e':pct<.66?'#1a6e40':'rgba(45,206,137,.2)';}
+    cells+=`<div class="cal-cell${isToday?' today':''}${isSel?' selected':''}${hasDebt?' has-debt':''}" style="background:${bg}" onclick="selectCalDay('${ds}')">
       <div class="cal-day-num">${d}</div>
-      ${ds&&ds.rev>0?`<div class="cal-day-rev">${Nraw(ds.rev)}</div><div class="cal-day-txns">${ds.txns} txn${ds.txns!==1?'s':''}</div>`:''}
-      ${barW>0?`<div class="cal-day-bar" style="background:var(--green);opacity:.5;width:${barW}%"></div>`:''}
+      ${st&&st.rev>0?`<div class="cal-day-rev">${N(st.rev)}</div>`:''}
+      ${st&&st.rev>0?`<div class="cal-day-bar" style="width:${Math.round(st.rev/maxRev*100)}%"></div>`:''}
     </div>`;
   }
-
   document.getElementById('cal-grid').innerHTML=cells;
-
-  // Re-render detail if a day is selected
   if(calSelected&&calSelected.startsWith(prefix)) renderCalDetail(calSelected);
   else closeCalDetail();
 }
 
-function selectCalDay(dateStr){
-  calSelected=dateStr;
-  renderCalendar();
-  renderCalDetail(dateStr);
-}
+function selectCalDay(ds){calSelected=ds;renderCalendar();renderCalDetail(ds);}
+function closeCalDetail(){calSelected=null;document.getElementById('cal-detail').classList.remove('open');}
 
-function closeCalDetail(){
-  calSelected=null;
-  document.getElementById('cal-detail').style.display='none';
-  // Deselect cells
-  document.querySelectorAll('.cal-cell.selected').forEach(c=>c.classList.remove('selected'));
-}
-
-function renderCalDetail(dateStr){
-  const el=document.getElementById('cal-detail');
-  el.style.display='block';
-  el.scrollIntoView({behavior:'smooth',block:'nearest'});
-
-  const dayTxns=S.txns.filter(t=>t.date===dateStr);
-  const cash=dayTxns.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
-  const trans=dayTxns.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
-  const dayDebts=S.debts.filter(d=>d.status==='pending'&&(d.entries||[]).some(e=>e.date===dateStr));
-  const debtAmt=dayDebts.reduce((a,d)=>{
-    const ents=(d.entries||[]).filter(e=>e.date===dateStr);
-    return a+ents.reduce((b,e)=>b+e.amount,0);
+function renderCalDetail(ds){
+  const det=document.getElementById('cal-detail');
+  det.classList.add('open');
+  const tt=S.txns.filter(t=>t.date===ds);
+  const cash=tt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
+  const trans=tt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+  const debtAmt=S.debts.filter(d=>d.status==='pending').reduce((a,d)=>{
+    return a+(d.entries||[]).filter(e=>e.date===ds).reduce((b,e)=>b+e.amount,0);
   },0);
-
-  const label=new Date(dateStr+'T12:00:00').toLocaleDateString('en-NG',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  document.getElementById('cal-detail-date').textContent=label;
-  document.getElementById('cal-detail-sub').textContent=dayTxns.length+' transaction'+(dayTxns.length!==1?'s':'');
-
-  document.getElementById('cal-detail-stats').innerHTML=
-    '<div class="stat-cell"><div class="stat-label">Revenue</div><div class="stat-value acc">'+N(cash+trans)+'</div></div>'
-    +'<div class="stat-cell"><div class="stat-label">Cash</div><div class="stat-value grn">'+N(cash)+'</div></div>'
-    +'<div class="stat-cell"><div class="stat-label">Transfer</div><div class="stat-value blu">'+N(trans)+'</div></div>'
-    +'<div class="stat-cell"><div class="stat-label">Debt That Day</div><div class="stat-value '+(debtAmt>0?'amb':'grn')+'">'+N(debtAmt)+'</div></div>';
-
+  document.getElementById('cal-detail-date').textContent=new Date(ds+'T12:00:00').toLocaleDateString('en-NG',{weekday:'short',day:'numeric',month:'short'});
+  document.getElementById('cal-detail-stats').innerHTML=`
+    <div class="stat-cell"><div class="stat-lbl">Revenue</div><div class="stat-val acc">${N(cash+trans)}</div></div>
+    <div class="stat-cell"><div class="stat-lbl">Cash</div><div class="stat-val grn">${N(cash)}</div></div>
+    <div class="stat-cell"><div class="stat-lbl">Transfer</div><div class="stat-val blu">${N(trans)}</div></div>
+    <div class="stat-cell"><div class="stat-lbl">Debt</div><div class="stat-val ${debtAmt>0?'amb':'grn'}">${N(debtAmt)}</div></div>`;
   let body='';
-
-  // Transactions table
-  if(dayTxns.length){
-    body+='<div class="cal-sect-label">Transactions</div>'
-      +'<div class="tbl-wrap"><table>'
-      +'<thead><tr><th>ID</th><th>Time</th><th>Product</th><th>Qty</th><th>Total</th><th>Pay</th><th>Customer</th><th>Debt</th></tr></thead>'
-      +'<tbody>'
-      +dayTxns.map(t=>'<tr>'
-        +'<td class="txnid">'+t.id+'</td>'
-        +'<td>'+( t.time||'—')+'</td>'
-        +'<td class="sans">'+t.prod+'</td>'
-        +'<td>'+t.qty+'</td>'
-        +'<td class="mono-green">'+N(t.total)+'</td>'
-        +'<td><span class="chip chip-'+t.pay.toLowerCase()+'">'+t.pay+'</span></td>'
-        +'<td class="sans">'+t.cust+'</td>'
-        +'<td>'+(t.isDebt==='Yes'?'<span class="chip chip-debt">Debt</span>':'—')+'</td>'
-        +'</tr>').join('')
-      +'</tbody></table></div>';
+  if(tt.length){
+    body+=`<div style="padding:8px 12px 4px;font-family:var(--mono);font-size:.58rem;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">Transactions</div>
+    <div class="tbl-wrap" style="margin:0 12px 8px">
+      <table><thead><tr><th>Time</th><th>Product</th><th>Qty</th><th>Total</th><th>Pay</th><th>Customer</th></tr></thead>
+      <tbody>${tt.map(t=>`<tr>
+        <td>${t.time||'—'}</td><td class="sans">${t.prod}</td><td>${t.qty}</td>
+        <td class="green">${N(t.total)}</td>
+        <td><span class="chip chip-${(t.pay||'').toLowerCase()}">${t.pay}</span></td>
+        <td class="sans">${t.cust}</td>
+      </tr>`).join('')}</tbody></table>
+    </div>
+    ${S.products.map(p=>buildLedger(p.name,tt)).join('')}`;
   } else {
-    body+='<div style="color:var(--t3);font-size:.78rem;padding:8px 0">No transactions on this day.</div>';
+    body+='<div style="text-align:center;color:var(--t3);font-size:.75rem;padding:16px">No transactions this day</div>';
   }
-
-  // Product ledgers for that day
-  if(dayTxns.length){
-    body+='<div class="cal-sect-label" style="margin-top:20px">Product Breakdown</div>'
-      +S.products.map(p=>buildLedger(p.name,dayTxns)).join('');
-  }
-
-  // Debt entries for that day
-  if(dayDebts.length){
-    body+='<div class="cal-sect-label" style="margin-top:20px">Debts Opened This Day</div>'
-      +'<div class="tbl-wrap"><table>'
-      +'<thead><tr><th>Customer</th><th>Product</th><th>Amount</th><th>Balance Now</th></tr></thead>'
-      +'<tbody>'
-      +dayDebts.map(d=>{
-        const ents=(d.entries||[]).filter(e=>e.date===dateStr);
-        const dayAmt=ents.reduce((a,e)=>a+e.amount,0);
-        const bal=d.owed-d.paid;
-        return '<tr>'
-          +'<td class="sans">'+d.cust+'</td>'
-          +'<td class="sans">'+d.prod+'</td>'
-          +'<td style="color:var(--amber)">'+N(dayAmt)+'</td>'
-          +'<td style="color:'+(bal>0?'var(--red)':'var(--green)')+';font-weight:600">'+N(bal)+'</td>'
-          +'</tr>';
-      }).join('')
-      +'</tbody></table></div>';
-  }
-
-  // Stock snapshot for that day
-  const stockDate=dateStr;
-  const hasStock=S.products.some(p=>S.stock[stockDate+'::'+p.name]!=null);
-  if(hasStock){
-    body+='<div class="cal-sect-label" style="margin-top:20px">Stock Snapshot</div>'
-      +'<div class="tbl-wrap"><table>'
-      +'<thead><tr><th>Product</th><th>Opening</th><th>Sold</th><th>Remaining</th></tr></thead>'
-      +'<tbody>'
-      +S.products.map(p=>{
-        const open=getOpeningStock(p.name,stockDate);
-        const sold=soldOfOnDate(p.name,stockDate);
-        const rem=Math.max(0,open-sold);
-        return '<tr>'
-          +'<td class="sans">'+p.name+'</td>'
-          +'<td>'+open+'</td>'
-          +'<td>'+sold+'</td>'
-          +'<td style="font-weight:600;color:'+(rem<=5?'var(--red)':'var(--t1)')+'">'+rem+'</td>'
-          +'</tr>';
-      }).join('')
-      +'</tbody></table></div>';
-  }
-
   document.getElementById('cal-detail-body').innerHTML=body;
+  det.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
+// ── PRODUCTS ───────────────────────────────────────────────────────────
+function submitProduct(){
+  const editName=document.getElementById('pf-edit').value;
+  const name=document.getElementById('pf-name').value.trim();
+  const price=parseFloat(document.getElementById('pf-price').value);
+  if(!name||!price||price<=0){toast('Name and price required','err');return;}
+  if(editName){
+    const idx=S.products.findIndex(p=>p.name===editName);
+    if(idx!==-1){
+      if(name!==editName){
+        S.txns.forEach(t=>{if(t.prod===editName)t.prod=name;});
+        S.debts.forEach(d=>{if(d.prod===editName)d.prod=name;(d.entries||[]).forEach(e=>{if(e.prod===editName)e.prod=name;});});
+        const ns={};Object.entries(S.stock).forEach(([k,v])=>{ns[k.replace('::'+editName,'::'+name)]=v;});S.stock=ns;
+      }
+      S.products[idx]={name,price};
+    }
+    toast('Updated');
+  } else {
+    if(S.products.find(p=>p.name.toLowerCase()===name.toLowerCase())){toast('Already exists','err');return;}
+    S.products.push({name,price});toast('Added');
+  }
+  persist();renderAll();cancelProductEdit();
+}
+function cancelProductEdit(){
+  document.getElementById('pf-edit').value='';
+  document.getElementById('pf-name').value='';
+  document.getElementById('pf-price').value='';
+}
+function editProduct(name){
+  const p=S.products.find(x=>x.name===name);if(!p) return;
+  document.getElementById('pf-edit').value=name;
+  document.getElementById('pf-name').value=name;
+  document.getElementById('pf-price').value=p.price;
+}
+function delProduct(name){
+  showModal('Delete Product',
+    `<div class="modal-danger">Delete <strong>${name}</strong>? Existing transactions won't be deleted.</div>`,
+    `<button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+     <button class="btn" style="flex:1;background:var(--red);color:#fff" onclick="confirmDelProduct('${name}')">Delete</button>`
+  );
+}
+function confirmDelProduct(name){
+  const idx=S.products.findIndex(p=>p.name===name);
+  if(idx!==-1) S.products.splice(idx,1);
+  persist();renderAll();closeModal();toast(name+' deleted','err');
+}
+
+function renderData(){
+  // products manage list
+  document.getElementById('prod-manage').innerHTML=S.products.map(p=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)">
+      <div>
+        <div style="font-family:var(--mono);font-size:.78rem;font-weight:600">${p.name}</div>
+        <div style="font-size:.65rem;color:var(--green);font-family:var(--mono)">${N(p.price)}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-blue btn-sm" onclick="editProduct('${p.name.replace(/'/g,"\\'")}')">Edit</button>
+        <button class="btn btn-red btn-sm" onclick="delProduct('${p.name.replace(/'/g,"\\'")}')">&#x2715;</button>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('data-summary').innerHTML=`
+    Transactions: <span class="acc">${S.txns.length}</span><br/>
+    Debt records: <span class="acc">${S.debts.length}</span><br/>
+    Products: <span class="acc">${S.products.length}</span><br/>
+    Stock snapshots: <span class="acc">${Object.keys(S.stock).length}</span><br/>
+    Last transaction: <span class="acc">${S.txns.length?S.txns[0].date+' '+S.txns[0].time:'—'}</span>`;
+}
+
+// ── DATA EXPORT/IMPORT ─────────────────────────────────────────────────
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='club-backup-'+today()+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(a.href),10000);
+  toast('Backup downloaded');
+}
+function importJSON(e){
+  const file=e.target.files[0];if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    showModal('Import Backup',
+      `<div class="modal-danger">&#x26A0; Replace ALL current data with <strong>${file.name}</strong>?</div>`,
+      `<button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+       <button class="btn btn-acc" style="flex:2" onclick="confirmImport('${encodeURIComponent(ev.target.result)}')">Import</button>`
+    );
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+function confirmImport(enc){
+  try{S=JSON.parse(decodeURIComponent(enc));if(!S.products?.length)S.products=[...DEFAULT_PRODUCTS];persist();renderAll();closeModal();toast('Imported');}
+  catch(e){closeModal();toast('Invalid file','err');}
+}
+function nukeData(){
+  showModal('Wipe All Data',
+    '<div class="modal-danger">&#x26A0; This deletes EVERYTHING. Export first.</div>',
+    `<button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+     <button class="btn" style="flex:1;background:var(--red);color:#fff" onclick="confirmNuke()">Wipe</button>`
+  );
+}
+function confirmNuke(){S={txns:[],debts:[],stock:{},products:[...DEFAULT_PRODUCTS]};persist();renderAll();closeModal();toast('Wiped','err');}
+
+// ── PDF EXPORT ─────────────────────────────────────────────────────────
+const PDF_CSS=`*{margin:0;padding:0;box-sizing:border-box;}body{background:#fff;color:#111;font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:28px;}h1{font-family:'IBM Plex Mono',monospace;font-size:1rem;font-weight:600;margin-bottom:3px;}.sub{font-size:.7rem;color:#666;margin-bottom:20px;}.grand{display:flex;gap:20px;background:#f7f7f7;border:1px solid #ddd;border-radius:5px;padding:12px 14px;margin-bottom:14px;flex-wrap:wrap;}.grand-item{display:flex;flex-direction:column;gap:3px;}.grand-lbl{font-size:.56rem;color:#666;text-transform:uppercase;letter-spacing:.06em;}.grand-val{font-family:'IBM Plex Mono',monospace;font-size:.88rem;font-weight:600;}.section-title{font-family:'IBM Plex Mono',monospace;font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#666;margin:16px 0 8px;}.prod-block{border:1px solid #ddd;border-radius:4px;overflow:hidden;margin-bottom:8px;}.prod-head{display:flex;justify-content:space-between;padding:8px 12px;background:#eee;font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:600;}.prod-body{display:grid;grid-template-columns:repeat(4,1fr);}.prod-cell{padding:8px 12px;border-right:1px solid #ddd;}.prod-cell:last-child{border-right:none;}.prod-cell-lbl{font-size:.56rem;color:#666;text-transform:uppercase;margin-bottom:2px;}.prod-cell-val{font-family:'IBM Plex Mono',monospace;font-size:.78rem;font-weight:600;}table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.72rem;}thead th{padding:7px 9px;text-align:left;font-size:.58rem;font-weight:600;text-transform:uppercase;color:#555;background:#eee;border-bottom:1px solid #ddd;}tbody td{padding:7px 9px;border-bottom:1px solid #eee;font-family:'IBM Plex Mono',monospace;}tbody td.sans{font-family:'IBM Plex Sans',sans-serif;}@media print{body{padding:12px;}@page{margin:.8cm;}}`;
+
+function openPrintWindow(html){
+  const full=`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Club Tracker</title><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"/><style>${PDF_CSS}</style></head><body>${html}<script>window.onload=()=>window.print();<\/script></body></html>`;
+  const blob=new Blob([full],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.target='_blank';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),10000);
+}
+
+function exportPDF(page){
+  const td=today();
+  if(page==='history'){
+    const rows=S.txns;
+    if(!rows.length){toast('No transactions','warn');return;}
+    openPrintWindow(`<h1>TRANSACTIONS — ALL TIME</h1><div class="sub">Generated ${new Date().toLocaleString('en-NG')} &nbsp;·&nbsp; ${rows.length} records</div>
+      <table><thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Product</th><th>Qty</th><th>Total</th><th>Payment</th><th>Customer</th><th>Debt</th></tr></thead>
+      <tbody>${rows.map(t=>`<tr><td>${t.id}</td><td>${t.date}</td><td>${t.time||'—'}</td><td class="sans">${t.prod}</td><td>${t.qty}</td><td>₦${Math.round(t.total).toLocaleString()}</td><td>${t.pay}</td><td class="sans">${t.cust}</td><td>${t.isDebt==='Yes'?'Yes':'—'}</td></tr>`).join('')}</tbody></table>`);
+  } else if(page==='stock'){
+    openPrintWindow(`<h1>STOCK — ${td}</h1><div class="sub">Generated ${new Date().toLocaleString('en-NG')}</div>
+      <table><thead><tr><th>Product</th><th>Price</th><th>Opening</th><th>Sold</th><th>Remaining</th><th>Value</th><th>Status</th></tr></thead>
+      <tbody>${S.products.map(p=>{const open=getOpeningStock(p.name,td);const sold=soldOfOnDate(p.name,td);const rem=Math.max(0,open-sold);const low=open>0&&rem<=Math.ceil(open*.15);return `<tr><td class="sans">${p.name}</td><td>₦${p.price.toLocaleString()}</td><td>${open}</td><td>${sold}</td><td>${rem}</td><td>₦${Math.round(rem*p.price).toLocaleString()}</td><td>${low?'LOW':'OK'}</td></tr>`;}).join('')}</tbody></table>`);
+  } else if(page==='debts'){
+    const pd=S.debts.filter(d=>d.status==='pending');
+    openPrintWindow(`<h1>DEBTS</h1><div class="sub">Generated ${new Date().toLocaleString('en-NG')}</div>
+      <div class="grand"><div class="grand-item"><div class="grand-lbl">Pending</div><div class="grand-val">${pd.length}</div></div><div class="grand-item"><div class="grand-lbl">Outstanding</div><div class="grand-val">₦${Math.round(pd.reduce((a,d)=>a+(d.owed-d.paid),0)).toLocaleString()}</div></div></div>
+      <table><thead><tr><th>Customer</th><th>Date</th><th>Product</th><th>Owed</th><th>Paid</th><th>Balance</th></tr></thead>
+      <tbody>${pd.map(d=>`<tr><td class="sans">${d.cust}</td><td>${d.date}</td><td class="sans">${d.prod}</td><td>₦${Math.round(d.owed).toLocaleString()}</td><td>₦${Math.round(d.paid).toLocaleString()}</td><td>₦${Math.round(d.owed-d.paid).toLocaleString()}</td></tr>`).join('')}</tbody></table>`);
+  } else if(page==='summary'){
+    const txns=getRangeTxns();
+    const cash=txns.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
+    const trans=txns.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+    const grouped=[...SUPPLIER_GROUPS];
+    const gp=SUPPLIER_GROUPS.flatMap(g=>g.products);
+    const ug=S.products.map(p=>p.name).filter(n=>!gp.includes(n));
+    if(ug.length) grouped.push({name:'Other',products:ug});
+    const groupsHtml=grouped.map(g=>{
+      const prods=g.products.filter(p=>S.products.find(x=>x.name===p));
+      if(!prods.length) return '';
+      const gt=txns.filter(t=>prods.includes(t.prod));
+      const gc=gt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
+      const gtr=gt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+      return `<div class="section-title">${g.name} — ₦${Math.round(gc+gtr).toLocaleString()}</div>`
+        +prods.map(p=>{const pt=gt.filter(t=>t.prod===p);const u=pt.reduce((a,t)=>a+t.qty,0);const pc=pt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);const ptr=pt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);return `<div class="prod-block"><div class="prod-head"><span>${p}</span><span>₦${Math.round(pc+ptr).toLocaleString()}</span></div><div class="prod-body"><div class="prod-cell"><div class="prod-cell-lbl">Units</div><div class="prod-cell-val">${u}</div></div><div class="prod-cell"><div class="prod-cell-lbl">Cash</div><div class="prod-cell-val">₦${Math.round(pc).toLocaleString()}</div></div><div class="prod-cell"><div class="prod-cell-lbl">Transfer</div><div class="prod-cell-val">₦${Math.round(ptr).toLocaleString()}</div></div><div class="prod-cell"><div class="prod-cell-lbl">Total</div><div class="prod-cell-val">₦${Math.round(pc+ptr).toLocaleString()}</div></div></div></div>`;}).join('');
+    }).join('');
+    openPrintWindow(`<h1>SUMMARY</h1><div class="sub">Generated ${new Date().toLocaleString('en-NG')}</div>
+      <div class="grand"><div class="grand-item"><div class="grand-lbl">Revenue</div><div class="grand-val">₦${Math.round(cash+trans).toLocaleString()}</div></div><div class="grand-item"><div class="grand-lbl">Cash</div><div class="grand-val">₦${Math.round(cash).toLocaleString()}</div></div><div class="grand-item"><div class="grand-lbl">Transfer</div><div class="grand-val">₦${Math.round(trans).toLocaleString()}</div></div></div>${groupsHtml}`);
+  }
+}
+
+function exportGroupPDF(gi){
+  const txns=getRangeTxns();
+  const periodDates=new Set(txns.map(t=>t.date));
+  const grouped=[...SUPPLIER_GROUPS];
+  const gp=SUPPLIER_GROUPS.flatMap(g=>g.products);
+  const ug=S.products.map(p=>p.name).filter(n=>!gp.includes(n));
+  if(ug.length) grouped.push({name:'Other',products:ug});
+  const g=grouped[gi];if(!g) return;
+  const prods=g.products.filter(p=>S.products.find(x=>x.name===p));
+  const gt=txns.filter(t=>prods.includes(t.prod));
+  const gc=gt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
+  const gtr=gt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+  const debtRows=prods.map(p=>({name:p,...getDebtStats(p,periodDates)})).filter(r=>r.owed>0);
+  const prodHtml=prods.map(p=>{const pt=gt.filter(t=>t.prod===p);const u=pt.reduce((a,t)=>a+t.qty,0);const pc=pt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);const ptr=pt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);return `<div class="prod-block"><div class="prod-head"><span>${p}</span><span>₦${Math.round(pc+ptr).toLocaleString()}</span></div><div class="prod-body"><div class="prod-cell"><div class="prod-cell-lbl">Units</div><div class="prod-cell-val">${u}</div></div><div class="prod-cell"><div class="prod-cell-lbl">Cash</div><div class="prod-cell-val">₦${Math.round(pc).toLocaleString()}</div></div><div class="prod-cell"><div class="prod-cell-lbl">Transfer</div><div class="prod-cell-val">₦${Math.round(ptr).toLocaleString()}</div></div><div class="prod-cell"><div class="prod-cell-lbl">Total</div><div class="prod-cell-val">₦${Math.round(pc+ptr).toLocaleString()}</div></div></div></div>`;}).join('');
+  const debtHtml=debtRows.length?`<div class="section-title">Debt Breakdown</div><table><thead><tr><th>Product</th><th>Units</th><th>Owed</th><th>Paid</th><th>Outstanding</th></tr></thead><tbody>${debtRows.map(r=>`<tr><td class="sans">${r.name}</td><td>${r.units}</td><td>₦${Math.round(r.owed).toLocaleString()}</td><td>₦${Math.round(r.paid).toLocaleString()}</td><td>₦${Math.round(r.bal).toLocaleString()}</td></tr>`).join('')}</tbody></table>`:'';
+  openPrintWindow(`<h1>${g.name.toUpperCase()}</h1><div class="sub">Generated ${new Date().toLocaleString('en-NG')}</div>
+    <div class="grand"><div class="grand-item"><div class="grand-lbl">Revenue</div><div class="grand-val">₦${Math.round(gc+gtr).toLocaleString()}</div></div><div class="grand-item"><div class="grand-lbl">Cash</div><div class="grand-val">₦${Math.round(gc).toLocaleString()}</div></div><div class="grand-item"><div class="grand-lbl">Transfer</div><div class="grand-val">₦${Math.round(gtr).toLocaleString()}</div></div></div>
+    ${prodHtml}${debtHtml}`);
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────
+document.getElementById('s-date').value=today();
+document.getElementById('stock-date').value=today();
+document.getElementById('d-date').value=today();
+// Re-expose after functions are defined
+window.renderAll = ()=>{ renderKPI(); renderPage(currentPage); };
+window.toast = toast;
+// Don't render until Firebase auth resolves (onAuthStateChanged handles it)
+// But render defaults so page isn't blank during auth check
+renderKPI();
+renderProdGrid();
 </script>
 </body>
 </html>
