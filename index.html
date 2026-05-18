@@ -1008,25 +1008,39 @@ function buildLedger(prod, txns, showCustomers=false){
     const custMap={};
     pt.forEach(t=>{
       const k=t.cust||'Walk-in';
-      if(!custMap[k]) custMap[k]={units:0,total:0,cash:0,trans:0};
+      if(!custMap[k]) custMap[k]={units:0,total:0,cash:0,trans:0,debtBal:0};
       custMap[k].units+=t.qty;
       custMap[k].total+=t.total;
       if(t.pay==='Cash') custMap[k].cash+=t.total;
       else custMap[k].trans+=t.total;
     });
+    // Check if each customer has a pending debt on this product
+    S.debts.filter(d=>d.status==='pending').forEach(d=>{
+      const k=d.cust;
+      if(!custMap[k]) return;
+      const debtOnProd=(d.entries||[]).filter(e=>e.prod===prod).reduce((a,e)=>a+e.amount,0);
+      if(debtOnProd>0){
+        const paidProp=d.owed>0?d.paid/d.owed:0;
+        custMap[k].debtBal+=debtOnProd*(1-paidProp);
+      }
+    });
     const sorted=Object.entries(custMap).sort((a,b)=>b[1].total-a[1].total);
     custHTML=`<div style="border-top:1px solid var(--line)">
       <div style="padding:6px 12px 4px;font-family:var(--mono);font-size:.56rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--t3)">By Customer</div>
-      ${sorted.map(([name,d])=>`
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-top:1px solid var(--line);gap:8px">
-          <div style="font-size:.74rem;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</div>
+      ${sorted.map(([name,d])=>{
+        const isDebtor=d.debtBal>0;
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-top:1px solid var(--line);gap:8px;${isDebtor?'background:rgba(255,69,69,.04)':''}">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:.74rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:${isDebtor?'var(--red)':'var(--t1)'}">${name}${isDebtor?` <span style="font-size:.6rem;font-weight:400">(owes ${N(d.debtBal)})</span>`:''}</div>
+          </div>
           <div style="display:flex;gap:10px;align-items:center;flex-shrink:0">
             <span style="font-family:var(--mono);font-size:.65rem;color:var(--t2)">${d.units} unit${d.units!==1?'s':''}</span>
             ${d.cash>0?`<span style="font-family:var(--mono);font-size:.65rem;color:var(--green)">${N(d.cash)}</span>`:''}
             ${d.trans>0?`<span style="font-family:var(--mono);font-size:.65rem;color:var(--blue)">${N(d.trans)}</span>`:''}
-            <span style="font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--acc)">${N(d.total)}</span>
+            <span style="font-family:var(--mono);font-size:.72rem;font-weight:600;color:${isDebtor?'var(--red)':'var(--acc)'}">${N(d.total)}</span>
           </div>
-        </div>`).join('')}
+        </div>`;
+      }).join('')}
     </div>`;
   }
 
