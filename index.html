@@ -319,15 +319,19 @@ tbody tr:last-child td{border-bottom:none;}
 
   window._fbSave = async (data) => {
     const user = auth.currentUser;
-    if(!user) return;
+    if(!user){ console.warn('_fbSave: no user'); return; }
+    const syncEl = document.getElementById('sync-status');
+    if(syncEl) syncEl.innerHTML = '&#x21BB; Saving...';
     try {
       await setDoc(doc(db, 'trackers', user.uid), {
         data: JSON.stringify(data),
         updatedAt: Date.now()
       });
+      console.log('Firestore save OK');
+      if(syncEl) syncEl.innerHTML = '&#x2714; Live';
     } catch(e) {
-      console.error('Firestore save error:', e);
-      // Fallback to localStorage
+      console.error('Firestore save error:', e.code, e.message);
+      if(syncEl) syncEl.innerHTML = '&#x26A0; '+e.code;
       try { localStorage.setItem('ct5', JSON.stringify(data)); } catch(_){}
     }
   };
@@ -346,28 +350,29 @@ tbody tr:last-child td{border-bottom:none;}
         if(snap.exists()){
           try {
             const parsed = JSON.parse(snap.data().data);
-            // Only update if data changed (avoid re-render loops)
             const newHash = JSON.stringify(parsed);
             if(newHash !== window._lastHash) {
               window._lastHash = newHash;
-              window.S = parsed;
-              if(!window.S.products?.length) window.S.products = [...window.DEFAULT_PRODUCTS];
-              if(!window.S.txns)  window.S.txns  = [];
-              if(!window.S.debts) window.S.debts = [];
-              if(!window.S.stock) window.S.stock  = {};
-              // Also cache locally
+              // Sync into local S via global bridge function
+              if(typeof window._syncState === 'function') {
+                window._syncState(parsed);
+              }
               try { localStorage.setItem('ct5', newHash); } catch(_){}
+              const syncEl = document.getElementById('sync-status');
+              if(syncEl) syncEl.innerHTML = '&#x2714; Live';
               window.renderAll();
             }
           } catch(e){ console.error('Parse error:', e); }
         } else {
-          // No doc yet — use localStorage data or defaults
+          // No doc yet — save current state up
+          console.log('No Firestore doc yet, uploading current state...');
           window._fbSave(window.S);
           window.renderAll();
         }
       }, (err) => {
         console.error('Snapshot error:', err);
-        // Fall back to localStorage
+        const syncEl = document.getElementById('sync-status');
+        if(syncEl) syncEl.innerHTML = '&#x26A0; Offline';
         window.renderAll();
       });
 
@@ -773,11 +778,22 @@ window.renderAll = ()=>{ renderKPI(); renderPage(currentPage); };
 window.toast = toast;
 window._lastHash = null;
 
+// Bridge: Firebase module calls this to sync remote state into local S
+window._syncState = function(parsed){
+  // Copy all properties from parsed into the SAME S object
+  // so all functions that close over S see the update
+  S.txns  = parsed.txns  || [];
+  S.debts = parsed.debts || [];
+  S.stock = parsed.stock || {};
+  S.products = parsed.products?.length ? parsed.products : [...DEFAULT_PRODUCTS];
+  // Keep window.S pointing to same object
+  window.S = S;
+};
+
 function loadState(){
-  // Load from localStorage as initial state (Firebase will override via snapshot)
   try{
     const d=localStorage.getItem('ct5');
-    if(d){ const p=JSON.parse(d); Object.assign(S,p); window.S=S; }
+    if(d){ const p=JSON.parse(d); window._syncState(p); }
   }catch(e){}
   if(!S.products||!S.products.length) S.products=[...DEFAULT_PRODUCTS];
   if(!S.txns) S.txns=[];
@@ -786,9 +802,8 @@ function loadState(){
   window.S=S;
 }
 function persist(){
-  // Save to Firebase (async, non-blocking)
+  window._lastHash = JSON.stringify(S); // prevent echo loop
   if(window._fbSave) window._fbSave(S);
-  // Always cache locally as backup
   try{localStorage.setItem('ct5',JSON.stringify(S));}catch(e){}
 }
 loadState();
@@ -981,11 +996,40 @@ function renderDash(){
   document.getElementById('dash-ledgers').innerHTML=S.products.map(p=>buildLedger(p.name,tt)).join('');
 }
 
-function buildLedger(prod,txns){
+function buildLedger(prod, txns, showCustomers=false){
   const pt=txns.filter(t=>t.prod===prod);
   const units=pt.reduce((a,t)=>a+t.qty,0);
   const cash=pt.filter(t=>t.pay==='Cash').reduce((a,t)=>a+t.total,0);
   const trans=pt.filter(t=>t.pay==='Transfer').reduce((a,t)=>a+t.total,0);
+
+  // Build customer breakdown
+  let custHTML='';
+  if(showCustomers && pt.length){
+    const custMap={};
+    pt.forEach(t=>{
+      const k=t.cust||'Walk-in';
+      if(!custMap[k]) custMap[k]={units:0,total:0,cash:0,trans:0};
+      custMap[k].units+=t.qty;
+      custMap[k].total+=t.total;
+      if(t.pay==='Cash') custMap[k].cash+=t.total;
+      else custMap[k].trans+=t.total;
+    });
+    const sorted=Object.entries(custMap).sort((a,b)=>b[1].total-a[1].total);
+    custHTML=`<div style="border-top:1px solid var(--line)">
+      <div style="padding:6px 12px 4px;font-family:var(--mono);font-size:.56rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--t3)">By Customer</div>
+      ${sorted.map(([name,d])=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;border-top:1px solid var(--line);gap:8px">
+          <div style="font-size:.74rem;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</div>
+          <div style="display:flex;gap:10px;align-items:center;flex-shrink:0">
+            <span style="font-family:var(--mono);font-size:.65rem;color:var(--t2)">${d.units} unit${d.units!==1?'s':''}</span>
+            ${d.cash>0?`<span style="font-family:var(--mono);font-size:.65rem;color:var(--green)">${N(d.cash)}</span>`:''}
+            ${d.trans>0?`<span style="font-family:var(--mono);font-size:.65rem;color:var(--blue)">${N(d.trans)}</span>`:''}
+            <span style="font-family:var(--mono);font-size:.72rem;font-weight:600;color:var(--acc)">${N(d.total)}</span>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  }
+
   return `<div class="ledger">
     <div class="ledger-head"><div class="ledger-name">${prod}</div><div class="ledger-total">${N(cash+trans)}</div></div>
     <div class="ledger-body">
@@ -993,7 +1037,9 @@ function buildLedger(prod,txns){
       <div class="ledger-cell"><div class="ledger-cell-lbl">Cash</div><div class="ledger-cell-val green">${N(cash)}</div></div>
       <div class="ledger-cell"><div class="ledger-cell-lbl">Transfer</div><div class="ledger-cell-val blue">${N(trans)}</div></div>
       <div class="ledger-cell"><div class="ledger-cell-lbl">Total</div><div class="ledger-cell-val acc">${N(cash+trans)}</div></div>
-    </div></div>`;
+    </div>
+    ${custHTML}
+  </div>`;
 }
 
 // ── HISTORY ────────────────────────────────────────────────────────────
@@ -1535,7 +1581,7 @@ function renderSummary(){
         <div class="stat-cell"><div class="stat-lbl">Transfer</div><div class="stat-val blu">${N(gtr)}</div></div>
         <div class="stat-cell"><div class="stat-lbl">Debt</div><div class="stat-val ${gDebt>0?'red':'grn'}">${N(gDebt)}</div></div>
       </div>
-      <div class="sup-body">${prods.map(p=>buildLedger(p,gt)).join('')}</div>
+      <div class="sup-body">${prods.map(p=>buildLedger(p,gt,true)).join('')}</div>
       ${debtProds.length?`<div style="padding:0 0 10px">
         <div style="font-family:var(--mono);font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);padding:10px 12px 6px">Debt Breakdown</div>
         <div class="tbl-wrap" style="margin:0 12px">
